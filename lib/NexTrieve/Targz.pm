@@ -1,12 +1,12 @@
 package NexTrieve::Targz;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::Targz::ISA = qw(NexTrieve);
-$NexTrieve::Targz::VERSION = '0.37';
 
 # Make sure we use the modules that we need here
 
@@ -18,7 +18,7 @@ use NexTrieve::RFC822 ();
 
 my $newmessagedelimiter = '^From ';
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 
@@ -172,6 +172,7 @@ sub add_file {
   my $rm_original = $self->rm_original;
   my $files = 0;
 
+# Obtain the files to work on if none specified
 # For all of the parameters specified
 #  Create a reference to it if it is not a reference to a list, else use that
 #  For all of the elements in the list reference
@@ -179,7 +180,8 @@ sub add_file {
 #   Attempt to open the file
 #   Reloop if failed
 
-  foreach my $element (@_ ? @_ : <$directory/*.new>) {
+  @_ = <$directory/*.new> unless @_;
+  foreach my $element (@_) {
     my $list = ref($element) eq 'ARRAY' ? $element : [$element];
     foreach (@{$list}) {
       my $filename = m#^/# ? $_ : "$cwd/$_";
@@ -446,7 +448,7 @@ sub count {
 
   my $self = shift;
   my $constraint = shift || '';
-  my $hash = shift || '';
+  my $hash = shift;
   return scalar @{$self->ids( $constraint )} unless $hash;
 
 # Obtain the directory
@@ -505,7 +507,7 @@ sub count_storable {
 
   my $self = shift;
   unless (defined($Storable::VERSION)) {
-    eval 'use Storable ()';
+    eval {require Storable};
     $Storable::VERSION ||= '';
   }
   return $self->count( shift ) unless $Storable::VERSION;
@@ -693,7 +695,7 @@ sub tarfile {
 # Return now if nothing to return
 
   my $self = shift;
-  my $datestamp = shift || '';
+  my $datestamp = shift;
   return '' unless $datestamp;
 
 # Obtain the type of information
@@ -727,7 +729,7 @@ sub update_xml {
   my $self = shift;
   my $class = ref($self);
   my $rfc822 = shift || $self->{$class.'::rfc822'};
-  my $docseq = shift || $self->{$class.'::docseq'} || '';
+  my $docseq = shift || $self->{$class.'::docseq'};
 
 # Obtain the directory
 # Obtain the name of the directory
@@ -813,9 +815,9 @@ sub xml {
 # Initialize the XML to be returned
 
   my $self = shift;
-  my $docseq = shift || '';
+  my $docseq = shift;
   my $mustkeep = defined(wantarray);
-  $docseq ||= $self->{ref{$self}.'::Docseq'} || '' unless $mustkeep;
+  $docseq ||= $self->{ref{$self}.'::Docseq'} unless $mustkeep;
   my $xml = <<EOD;
 <?xml version="1.0" encoding="utf-8"?>
 <ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
@@ -1289,7 +1291,7 @@ sub _message_ids {
 # Return now if nothing to do
 
   my $self = shift;
-  my $datestamp = shift || '';
+  my $datestamp = shift;
   return [] unless $datestamp;
 
 # Obtain the work directory, making sure we have all the files of that date
@@ -1350,11 +1352,11 @@ sub _resync_news {
 
   my ($articles,$first,$last) = $nntp ? $nntp->group( $newsgroup ) : ();
   if (!defined($articles)) {
-    if (my $newnntp = shift || '') {
+    if (my $newnntp = shift) {
       $nntp = &{$newnntp};
       ($articles,$first,$last) = $nntp->group( $newsgroup ) if $nntp;
     } 
-    return (0,-1,$nntp) unless $articles || '';
+    return (0,-1,$nntp) unless $articles;
   }
 
 # Initialize the hash of headers fetched
@@ -1503,11 +1505,12 @@ sub _splat_datestamp {
 # Obtain the object
 # Obtain the datestamp
 # Obtain the extension
+# Obtain the renew flag
 
   my $self = shift;
   my $datestamp = shift;
   my $extension = shift || '';
-  my $renew = shift || '';
+  my $renew = shift;
 
 # Obtain the work directory
 # Adapt to the final work directory

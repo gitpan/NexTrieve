@@ -1,12 +1,12 @@
 package NexTrieve::Mbox;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::Mbox::ISA = qw(NexTrieve);
-$NexTrieve::Mbox::VERSION = '0.37';
 
 # Use other NexTrieve modules that we need always
 
@@ -22,7 +22,7 @@ my $mailbox;
 my $offset;
 my $length;
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 
@@ -67,15 +67,14 @@ sub Docseq {
 # Obtain the Archive specification
 # Change into a handle for appending if we have one and it is a filename
 
-  my $archive = $self->archive || '';
-  $archive = $self->openfile( $archive,'>>' ) || ''
-   if $archive and !ref($archive);
+  my $archive = $self->archive;
+  $archive = $self->openfile( $archive,'>>' ) if $archive and !ref($archive);
 
 # Obtain the conceptualmailbox name
 # Obtain the base offset if there is any
 # Initialize the offset
 
-  my $conceptualmailbox = $self->conceptualmailbox || '';
+  my $conceptualmailbox = $self->conceptualmailbox;
   my $baseoffset = $self->baseoffset || 0;
   $offset = $conceptualmailbox ? $baseoffset : 0;
 

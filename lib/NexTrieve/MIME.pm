@@ -1,12 +1,12 @@
 package NexTrieve::MIME;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::MIME::ISA = qw(NexTrieve);
-$NexTrieve::MIME::VERSION = '0.37';
 
 # Use other NexTrieve modules that we need always
 
@@ -27,7 +27,7 @@ my %mimeprocessor = (
  'text/x-diff'		=> \&_plain,
 );
 
-# Return true value for use
+# Satisy -require-
 
 1;
 

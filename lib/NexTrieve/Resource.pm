@@ -1,12 +1,12 @@
 package NexTrieve::Resource;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::Resource::ISA = qw(NexTrieve);
-$NexTrieve::Resource::VERSION = '0.37';
 
 # Initialize the list of attribute keys
 # Initialize the list of texttype keys
@@ -24,7 +24,7 @@ my %allkey = (
  indexing	=> \@indexingkey,
 );
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 

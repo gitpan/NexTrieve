@@ -1,18 +1,18 @@
 package NexTrieve::Collection;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::Collection::ISA = qw(NexTrieve);
-$NexTrieve::Collection::VERSION = '0.37';
 
 # Use all the other NexTrieve modules that we need always
 
 use NexTrieve::Collection::Index ();
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 

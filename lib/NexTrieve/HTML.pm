@@ -1,12 +1,12 @@
 package NexTrieve::HTML;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::HTML::ISA = qw(NexTrieve);
-$NexTrieve::HTML::VERSION = '0.37';
 
 # Use other NexTrieve modules that we need always
 
@@ -19,7 +19,7 @@ use NexTrieve::Document ();
 my $displaycontainers = NexTrieve->_default_displaycontainers;
 my $removecontainers = NexTrieve->_default_removecontainers;
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 
@@ -50,7 +50,7 @@ sub Document {
 # Adapt source for display if source available
 
   my $document = $ntv->Document;
-  $document->{ref($document).'::SOURCE'} = $source if $source || '';
+  $document->{ref($document).'::SOURCE'} = $source if $source;
   $source .= ': ' if $source;
 
 # Get rid of any conceptual null bytes (if they're there, they're of no use)
@@ -84,7 +84,7 @@ sub Document {
 # Get rid of anything that looks like a comment
 
   my %content = (id => $id, date => $date);
-  if (my $preprocessor = $self->preprocessor || '') {
+  if (my $preprocessor = $self->preprocessor) {
     &{$preprocessor}( \%content,$html );
   }
   $html =~ s#<!--.*?-->##sg;

@@ -1,18 +1,18 @@
 package NexTrieve::Index;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::Index::ISA = qw(NexTrieve);
-$NexTrieve::Index::VERSION = '0.37';
 
 # Use other NexTrieve modules that we need always
 
 use NexTrieve::Resource ();
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 
@@ -82,7 +82,7 @@ sub ResourceFromIndex {
 
   my $self = shift;
   my $command = $self->executable( 'ntvcheck' );
-  my $indexdir = $self->indexdir || $self->Resource->indexdir || '';
+  my $indexdir = $self->indexdir || $self->Resource->indexdir;
 
 # If we don't have an indexdir yet
 #  Add error and return
@@ -164,7 +164,7 @@ sub mkdir {
 # Obtain the indexdir
 
   my $self = shift;
-  my $indexdir = $self->indexdir || $self->Resource->indexdir || '';
+  my $indexdir = $self->indexdir || $self->Resource->indexdir;
 
 # Return the result of the creation of the directory if there is one known
 # Add error and return
@@ -310,7 +310,7 @@ sub update_end {
 # Delete the old indexdir field
   
   delete( $self->{$class.'::baseindexdir'} );
-  if (my $oldindexdir = $self->{$class.'::oldindexdir'} || '') {
+  if (my $oldindexdir = $self->{$class.'::oldindexdir'}) {
     $self->indexdir( $oldindexdir );
   } else {
     delete( $self->{$class.'::indexdir'} );
@@ -369,7 +369,7 @@ sub update_start {
 #   If copy to the new directory failed
 #    Add error and return
 
-  if (shift || '') {
+  if (shift) {
     if (-d $indexdir) {
       my @file = <$indexdir/*.ntv>;
       if (my $exit = system( "cp -p @file $indexdirnew" )) {

@@ -1,19 +1,19 @@
 package NexTrieve::PDF;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::PDF::ISA = qw(NexTrieve);
-$NexTrieve::PDF::VERSION = '0.37';
 
 # Use other NexTrieve modules that we need always
 
 use NexTrieve::Docseq ();
 use NexTrieve::Document ();
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 
@@ -30,11 +30,10 @@ use NexTrieve::Document ();
 sub executable {
 
 # Obtain the class
-# Set the filenames to check
+# Set the filenames to check if non specified already
 
   my $class = shift;
-#  my $class = (@_ and $_[0] eq 'NexTrieve::PDF') ? shift : ''; # strange error
-  my @program = @_ ? @_ : qw(pdfinfo pdftotext);
+  @_ = qw(pdfinfo pdftotext) unless @_;
 
 # For all the program names specified
 #  Return false if strange characters in program name
@@ -43,7 +42,7 @@ sub executable {
 #  Return indicating failure
 # Return indicating success
 
-  foreach my $program (@program) {
+  foreach my $program (@_) {
     return 0 if $program =~ m#\W#;
     my $exit = system( "$program -v 2>/dev/null" );
     next if $exit =~ m#^(?:0|256)$#;
@@ -91,7 +90,7 @@ sub Document {
 # Adapt source for display if source available
 
   my $document = $ntv->Document;
-  $document->{ref($document).'::SOURCE'} = $source if $source || '';
+  $document->{ref($document).'::SOURCE'} = $source if $source;
   $source .= ': ' if $source;
 
 # Attempt to get the information about this PDF-file
@@ -129,7 +128,7 @@ sub Document {
 # Make sure we have valid XML for the text
 
   $document->encoding( 'iso-8859-1' );
-  if (my $preprocessor = $self->preprocessor || '') {
+  if (my $preprocessor = $self->preprocessor) {
     &{$preprocessor}( \%content,$text );
   }
   $self->ampersandize( $text );

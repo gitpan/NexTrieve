@@ -1,10 +1,10 @@
 package NexTrieve::Overview;
 
-# Make sure we do everything by the book
 # Set version information
+# Make sure we do everything by the book from now on
 
+$VERSION = '0.38';
 use strict;
-$NexTrieve::Overview::VERSION = '0.37';
 
 # Show warning that you shouldn't -use- this module
 
@@ -16,7 +16,7 @@ it can be easily included in a package with its documentation.
 EOD
 }
 
-# Return false value so that it won't be used by anybody
+# Return false value so that it won't be -use-d or -require-d by anybody
 
 0;
 

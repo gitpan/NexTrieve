@@ -1,18 +1,18 @@
 #--------------------------------------------------------------------------
 
-# Generated from ./create_module on Mon Mar 18 10:20:36 2002
+# Generated from ./create_module on Wed Jul 10 17:07:54 2002
 
 package NexTrieve::UTF8;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::UTF8::ISA = qw(NexTrieve);
-$NexTrieve::UTF8::VERSION = '0.37';
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 

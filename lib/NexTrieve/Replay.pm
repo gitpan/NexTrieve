@@ -1,19 +1,19 @@
 package NexTrieve::Replay;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::Replay::ISA = qw(NexTrieve);
-$NexTrieve::Replay::VERSION = '0.37';
 
 # Use all of the NexTrieve submodules that we need for sure
 
 use NexTrieve::Querylog ();
 use NexTrieve::Search ();
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 

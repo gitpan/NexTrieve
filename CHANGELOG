@@ -1,3 +1,35 @@
+0.38	10 July 2002
+	Re-arranged each top of the module so that fully qualified @ISA and
+	$VERSION are not neccesary anymore.
+
+	Changed count_storable in Targz.pm to require rather than use Storable.
+	
+	Checked all modules for possible defined() check on non-strict refs.
+	There shouldn't be any problems.
+
+	20 June 2002
+	Removed a lot of cargo-culted "|| ''" structures from NexTrieve.pm,
+	DBI.pm, HTML.pm, Index.pm, Mbox.pm, Message.pm, PDF.pm, Querylog.pm,
+	RFC822.pm and Targz.pm.
+
+	18 June 2002
+	Fixed some loops in PDF.pm and Targz.pm now knowing that you can assign
+	to @_ without any problem.
+
+	10 June 2002
+	Added binmode() to openfile to cause reads to always be bytes even
+	with Perl 5.8+ in UTF-8 environments (as discussed on p5p for
+	5.8.0-RC2).
+
+	7 June 2002
+	Went through all the source and changed all instances of
+	foreach (keys %hash) to use a while (my ($key,$value) = each %hash)
+	is this will generally be faster and have a lower memory footprint.
+	Left all the cases with sorted keys in there, as they are the only
+	way for now to guarantee order of the keys, which is mainly important
+	for the test-suite, but may also allow better (human) readability of
+	generated XML.
+
 0.37	2 June 2002
 	Checked test-suite against 5.8.0-RC1.  There do not seem to be any
 	problems, even with a threaded perl, although no specific thread-test

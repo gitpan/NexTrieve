@@ -1,14 +1,14 @@
 package NexTrieve::Document;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::Document::ISA = qw(NexTrieve);
-$NexTrieve::Document::VERSION = '0.37';
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 

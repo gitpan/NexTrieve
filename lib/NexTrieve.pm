@@ -1,12 +1,10 @@
 package NexTrieve;
 
-# Make sure we do everything by the book
-# Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+$VERSION = '0.38';
 use strict;
-@NexTrieve::ISA = qw();
-$NexTrieve::VERSION = '0.37';
 
 # Use the external modules that we need always
 
@@ -166,7 +164,7 @@ my %entity2name = (
  yuml   => '#255',
 );
 
-# Make sure that a true value is returned from -use-
+# Satisfy -require-
 
 1;
 
@@ -469,7 +467,7 @@ sub Resource {
 # Obtain the name of the field
 # Obtain the current setting
 
-  my $resource = shift || '';
+  my $resource = shift;
   my $field = $class.'::Resource';
   my $old = $self->{$field};
 
@@ -479,7 +477,7 @@ sub Resource {
 #   Save that as resource
 
   if ($resource) {
-    my $objectclass = ref($resource);
+    my $objectclass = ref($resource) || '';
     if ($objectclass eq 'NexTrieve::Resource') {
       $self->{$field} = $resource;
 
@@ -554,7 +552,7 @@ sub DefaultInputEncoding {
 #------------------------------------------------------------------------
 
 #  IN: 1 encoding (default: utf8)
-# OUT: 1 current encoding
+# OUT: 1 current encoding (or empty string)
 
 sub encoding {
 
@@ -830,9 +828,9 @@ sub Set {
 #   Execute the method with the given parameters
 
   if ($type eq 'HASH') {
-    foreach my $method (keys %{$ref}) {
-      $self->$method( ref($ref->{$method}) eq 'ARRAY' ?
-       @{$ref->{$method}} : $ref->{$method} );
+    while (my ($method,$parameter) = each %{$ref}) {
+      $self->$method( ref($parameter) eq 'ARRAY' ?
+       @{$parameter} : $parameter );
     }
 
 # Elseif we have a list reference
@@ -1129,12 +1127,15 @@ sub normalize {
 sub openfile {
 
 # Obtain the object
-# Create a handle
-# Open the file and return its handle if successful
+# If we can create a handle
+#  Make sure we'll always read bytes, specifically in Perl 5.8+
+#  Return the handle
 
   my $self = shift;
-  my $handle;
-  return $handle if $handle = IO::File->new( @_ );
+  if (my $handle = IO::File->new( @_ )) {
+    binmode( $handle );
+    return $handle;
+  }
 
 # Add error to object
 # And return empty handed
@@ -1211,7 +1212,7 @@ sub recode {
     if ($Encode::VERSION) {
       $converter = sub {Encode::from_to( $_[0],$from,$to )};
       my $space = '    ';
-      if (eval{&{$converter}($space)} || '') {
+      if (eval{&{$converter}($space)}) {
         $code2code{$from,$to} = $converter;
       } else {
         $converter = undef;
@@ -1229,7 +1230,7 @@ sub recode {
     eval( 'use Text::Iconv; $Text::Iconv::VERSION ||= ""' )
      unless defined( $Text::Iconv::VERSION );
     if ($Text::Iconv::VERSION) {
-      if (my $object = eval{Text::Iconv->new($from,$to)} || '') {
+      if (my $object = eval{Text::Iconv->new($from,$to)}) {
         $converter = $code2code{$from,$to} =
          sub {$_[0] = $object->convert( $_[0] )};
       }
@@ -1317,7 +1318,7 @@ sub slurp {
 # Return now with nothing if no handle to be read
 
   my $self = shift;
-  my $handle = shift || '';
+  my $handle = shift;
   return '' unless $handle;
 
 # Save current slurp setting
@@ -1329,7 +1330,7 @@ sub slurp {
   my $slurp = $/;
   undef( $/ );
   my $data = <$handle>;
-  close( $handle ) unless shift || '';
+  close( $handle ) unless shift;
   $/ = $slurp;
 
 # Return whatever we got
@@ -1351,14 +1352,14 @@ sub splat {
 # Return now with nothing if no handle to be written to
 
   my $self = shift;
-  my $handle = shift || '';
+  my $handle = shift;
   return '' unless $handle;
 
 # Write the data to the file
 # Close the handle unless inhibited
 
   my $success = print $handle $_[0];
-  close( $handle ) unless $_[1] || '';
+  close( $handle ) unless $_[1];
   return $success;
 } #splat
 
@@ -1512,8 +1513,8 @@ sub xmllint {
 #  Lose whatever parameter there may be
 
   my $self = shift;
-  if (($_[0] || '') and
-   my $handle = eval{$self->openfile( "xmllint --version 2>&1|" )} || '') {
+  if ($_[0] and
+   my $handle = eval{$self->openfile( "xmllint --version 2>&1|" )}) {
     return $self->_class_variable(
      'xmllint',$self->slurp( $handle ) =~ m#^xmllint: using libxml# );
   } else {
@@ -1646,7 +1647,7 @@ sub integrity {
 # If there is no index directory
 #  Add error and return
 
-  my $indexdir = $self->indexdir || $self->Resource->indexdir || '';
+  my $indexdir = $self->indexdir || $self->Resource->indexdir;
   unless ($indexdir) {
     $self->_add_error( "Must know which index to check" );
     return;
@@ -1833,7 +1834,7 @@ sub skip {
 # Obtain the current value
 
   my $self = shift;
-  my $flag = shift || '';
+  my $flag = shift;
   my $field = ref($self).'::skip';
   my $old = $self->{$field} || '';
 
@@ -1975,7 +1976,7 @@ sub xml {
 
 # Obtain the object
 # Obtain the XML if not called in a void context
-# Show the XML to the world if called in void context without news setting
+# Show the XML to the world if called in void context without new setting
 
   my $self = shift;
   my $xml = $self->write_string || '';
@@ -2131,7 +2132,7 @@ sub _add_container {
 # Initialize xml
 
   my $self = shift;
-  my $name = shift || '';
+  my $name = shift;
   my $line = shift || '';
   my $xml = '';
 
@@ -2178,7 +2179,7 @@ sub _add_error {
   my $self = shift;
   my $message = shift;
   push( @{$self->{ref($self).'::Errors'}},$message );
-  warn "$message\n" if $self->{'PrintError'} || '';
+  warn "$message\n" if $self->{'PrintError'};
 
 # If we're to die on errors
 #  If it is a code reference
@@ -2187,7 +2188,7 @@ sub _add_error {
 #   Eval what we had as a value
 #  Die now if we hadn't died already
   
-  if (my $action = $self->{'RaiseError'} || '') {
+  if (my $action = $self->{'RaiseError'}) {
     if (ref($action) eq 'CODE') {
       &{$action}( $message );
     } else {
@@ -2247,8 +2248,8 @@ sub _command_log {
 # If we don't have an indexdir still
 #  Add error to object and return
 
-  my $indexdir = $self->indexdir || '';
-  $self->indexdir( $indexdir = $resource->indexdir || '' ) unless $indexdir;
+  my $indexdir = $self->indexdir;
+  $self->indexdir( $indexdir = $resource->indexdir ) unless $indexdir;
   unless ($indexdir) {
     $self->_add_error( "Must have an indexdir specification" );
     return;
@@ -2288,7 +2289,7 @@ sub _command_log {
 # Save the position to read the result from
 # Return the command and the log name
 
-  my $log = $self->log || '';
+  my $log = $self->log;
   $self->log( $log = "$indexdir/$filename.log" ) unless $log;
   $self->{ref($self).'::READFROM'} = -e $log ? -s _ : 0;
   return ($command,$log,$indexdir);
@@ -2350,7 +2351,7 @@ sub _datetimestamp {
   my $epoch = $line =~ m#^\d+$# ? $line : Date::Parse::str2time( $line ) || '';
   unless ($epoch) {
     $line =~ s#\s*\w{3}\s*$##;
-    $epoch = Date::Parse::str2time( $line ) || '';
+    $epoch = Date::Parse::str2time( $line );
   }
 
 # Return now if we cannot distill an epoch time
@@ -2443,7 +2444,7 @@ sub _fetch_content {
 #  Return the result of the fetch if we have a fetcher now
 
   if (defined($type)) {
-    my $fetcher = $contentfetcher{$type} || '';
+    my $fetcher = $contentfetcher{$type};
     $fetcher ||= $type if ref($type) eq 'CODE';
     return &{$fetcher}( $self,$id,@_ ) if $fetcher;
 
@@ -2560,7 +2561,7 @@ sub _fetch_from_filename {
 #  Obtain the last modified info
 #  Obtain the content
 
-  if (my $handle = $self->openfile( $filename,'<' ) || '') {
+  if (my $handle = $self->openfile( $filename,'<' )) {
     my $lastmodified = (stat($handle))[9];
     my $content = $self->slurp( $handle );
 
@@ -2894,7 +2895,7 @@ sub _process_container {
 #    Make sure it's normalized the way we want it
 #    Add the result
 
-  if ($proc || '') {
+  if ($proc) {
     if (ref($todo) eq 'ARRAY') {
       foreach (@{$todo}) {
         my $value = $document->_intext_recode( &{$proc}( $_,$name,$document ) );
@@ -2963,7 +2964,7 @@ sub _processor_definition {
 
   foreach my $list (@_) {
     my $key = $list->[0];
-    my $coderef = $list->[1] || '';
+    my $coderef = $list->[1];
 
 #  If a coderef or keyword was specified
 #   Obtain the standard coderef if there is one or just use what was given
@@ -3215,8 +3216,8 @@ sub _all_field_variable_hash_kill_xml {
 
   my @old;
   if (defined(wantarray)) {
-    foreach my $name (keys %{$self->{$field}}) {
-      push( @old,[$name,@{$self->{$field}->{$name}}{@key}] );
+    while (my ($name,$value) = each %{$self->{$field}}) {
+      push( @old,[$name,@{$value}{@key}] );
     }
   }
 
@@ -3453,7 +3454,7 @@ sub _init_xml {
 #  If it is not a supported version
 #   Add error and return
 
-  my $version = $self->{$class.'::version'} || '';
+  my $version = $self->{$class.'::version'};
   if ($version) {
     if ($version !~ m#^(?:1.0)$#) {
       $self->_add_error( "'$version' is not supported by this version of '$class'" );
@@ -3650,7 +3651,7 @@ sub _emptycontainers2hash {
 # Obtain the XML
 
   my $self = shift;
-  my $xml = shift || '';
+  my $xml = shift;
 
 # Initialize the hash
 # If there is something to do
@@ -3739,7 +3740,7 @@ sub _list2emptycontainers {
 
   my $self = shift;
   my $name = shift;
-  my $list = shift || '';
+  my $list = shift;
 
 # Initialize the XML
 # For all of the elements in the list
@@ -3808,7 +3809,7 @@ sub _hash2attributes {
 
   my $self = shift;
   my $hash = shift;
-  my $list = shift || '';
+  my $list = shift;
 
 # Initialize the XML
 # For all of the keys in the hash that we need to process

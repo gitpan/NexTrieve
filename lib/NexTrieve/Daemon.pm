@@ -1,18 +1,18 @@
 package NexTrieve::Daemon;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::Daemon::ISA = qw(NexTrieve);
-$NexTrieve::Daemon::VERSION = '0.37';
 
 # Use all the other NexTrieve modules that we need always
 
 use NexTrieve::Resource ();
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 
@@ -340,7 +340,7 @@ sub _pid {
 #  Wait for a second (server might be starting)
 
   my $pidfile = $self->{$class.'::pidfile'} = "$indexdir/pid.$port.ntv";
-  foreach( 1..5 ) {
+  for (my $i=1; $i<5; $i++) {
     last if -e $pidfile;
     sleep( 1 );
   }

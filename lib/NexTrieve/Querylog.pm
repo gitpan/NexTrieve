@@ -1,18 +1,18 @@
 package NexTrieve::Querylog;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::Querylog::ISA = qw(NexTrieve);
-$NexTrieve::Querylog::VERSION = '0.37';
 
 # Use all of the NexTrieve submodules that we need for sure
 
 use NexTrieve::Query ();
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 
@@ -121,7 +121,7 @@ sub filename {
 #  Get first query if we have a handle
 
   if (@_) {
-    $self->_handle( my $handle = $self->openfile( shift,'<' ) || '' );
+    $self->_handle( my $handle = $self->openfile( shift,'<' ) );
     $self->_next if $handle;
   }
 

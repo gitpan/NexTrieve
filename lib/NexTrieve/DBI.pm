@@ -1,19 +1,19 @@
 package NexTrieve::DBI;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::DBI::ISA = qw(NexTrieve);
-$NexTrieve::DBI::VERSION = '0.37';
 
 # Use the modules that are needed always
 
 use NexTrieve::Docseq ();
 use NexTrieve::Document ();
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 
@@ -43,7 +43,7 @@ sub Docseq {
 # Obtain the statement handle
 # Return now if none available
 
-  my $sth = shift || '';
+  my $sth = shift;
   return $docseq unless $sth;
 
   my $id = shift || $self->id;
@@ -51,7 +51,7 @@ sub Docseq {
   my $normalize = shift || $self->normalize;
   my $method = shift || $self->fetch;
 
-  while (my $content = $sth->$method || '') {
+  while (my $content = $sth->$method) {
     $docseq->add( $self->Document( $content,$id,$text,$normalize ) );
   }
 

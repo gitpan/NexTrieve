@@ -1,19 +1,19 @@
 package NexTrieve::Search;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::Search::ISA = qw(NexTrieve);
-$NexTrieve::Search::VERSION = '0.37';
 
 # Use other NexTrieve modules that we need always
 
 use NexTrieve::Hitlist ();
 use NexTrieve::Resource ();
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 

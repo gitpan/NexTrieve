@@ -1,12 +1,12 @@
 package NexTrieve::Message;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::Message::ISA = qw(NexTrieve);
-$NexTrieve::Message::VERSION = '0.37';
 
 # Use other NexTrieve modules that we need always
 
@@ -18,7 +18,7 @@ use NexTrieve::MIME ();
 
 my $mimeprocessor = NexTrieve::MIME::processor();
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 
@@ -65,7 +65,7 @@ sub Document {
 # Set the document character encoding if there are no attachments
 
   my %content = (id => [$id], date => [$date]);
-  my $encoding = $head->encoding || '';
+  my $encoding = $head->encoding;
   my $multipart = $head->isMultipart;
   $document->encoding( $encoding ) if $encoding and !$multipart;
 
@@ -74,9 +74,9 @@ sub Document {
 #  Add line keyed to header if to be handled further
 
   my %header = map {($_,1)} (keys %{$attrhash},keys %{$texthash});
-  foreach (keys %header) {
-    push( @{$content{$_}},
-     map {$_->toString =~ m#:\s*(.*)#; $1} $head->get( $_ ) );
+  while (my $key = each %header) {
+    push( @{$content{$key}},
+     map {$_->toString =~ m#:\s*(.*)#; $1} $head->get( $key ) );
   }
 
 # Initialize the text
@@ -95,7 +95,7 @@ sub Document {
   } else {
     my $type = lc($head->get( 'content-type' ));
     if (my $processor =
-     $self->{$class.'::mimeproc'}->{$type} || $mimeprocessor->{$type} || '') {
+     $self->{$class.'::mimeproc'}->{$type} || $mimeprocessor->{$type}) {
       $text = &{$processor}( $self,$message->decoded,$encoding,$document );
     }
   }
@@ -204,11 +204,11 @@ sub _process_parts {
       my $type = $head->get( 'content-type' );
       if (my $processor =
        $self->{ref($self).'::mimeproc'}->{$type} ||
-       $mimeprocessor->{$type} || '') {
+       $mimeprocessor->{$type}) {
         $text .= &{$processor}(
          $self,
          $part->decoded,
-         $self->_normalize_encoding( $head->encoding || '' ),
+         $self->_normalize_encoding( $head->encoding ),
          $document
         );
       }

@@ -1,12 +1,12 @@
 package NexTrieve::RFC822;
 
-# Make sure we do everything by the book
 # Set modules to inherit from
 # Set version information
+# Make sure we do everything by the book from now on
 
+@ISA = qw(NexTrieve);
+$VERSION = '0.38';
 use strict;
-@NexTrieve::RFC822::ISA = qw(NexTrieve);
-$NexTrieve::RFC822::VERSION = '0.37';
 
 # Use other NexTrieve modules that we need always
 
@@ -37,15 +37,15 @@ my %decode = (
 #   Warn the user
 #   Remove this encoding type (not supported now)
 
-foreach (keys %decode) {
-  my ($module) = $decode{$_} =~ m#^(.*)::#;
+while (my ($key,$value) = each %decode) {
+  my ($module) = $value =~ m#^(.*)::#;
   eval( "use $module ()" );
   no strict 'refs';
   if (defined ${$module.'::VERSION'}) {
-    $decode{$_} = \&{$decode{$_}};
+    $decode{$key} = \&{$value};
   } else {
-    warn qq(Cannot decode "$_": install $module module\n);
-    delete( $decode{$_} );
+    warn qq(Cannot decode "$key": install $module module\n);
+    delete( $decode{$key} );
   }
 }
 
@@ -53,7 +53,7 @@ foreach (keys %decode) {
 
 my $mimeprocessor = NexTrieve::MIME::processor();
 
-# Return true value for use
+# Satisfy -require-
 
 1;
 
@@ -82,7 +82,7 @@ sub Document {
 # Remember the source if a filename was specified
 
   my $document = $ntv->Document;
-  $document->{ref($document).'::SOURCE'} = $source if $source || '';
+  $document->{ref($document).'::SOURCE'} = $source if $source;
 
 # Obtain the class of the object
 # Obtain local copy of attribute hash
@@ -116,8 +116,8 @@ sub Document {
 
   my %content = $id ? (id => [$id]) : ();
   if (my $extra = shift) {
-    foreach (keys %{$extra}) {
-      $content{$_} = [$extra->{$_}];
+    while (my ($key,$value) = each %{$extra}) {
+      $content{$key} = [$value];
     }
   }
 
@@ -150,7 +150,7 @@ sub Document {
 #  Process the text and add to the texts we had
 
   } elsif (my $processor =
-   $self->{$class.'::mimeproc'}->{$type} || $mimeprocessor->{$type} || '') {
+   $self->{$class.'::mimeproc'}->{$type} || $mimeprocessor->{$type}) {
     $message = _decode_transfer_encoding( $transferencoding,$handle->rest );
     $text = &{$processor}( $self,$message,$characterencoding,$document );
   }
@@ -314,7 +314,7 @@ sub _normalize_header {
 
   my @header;
   my $line = '';
-  while ($_ = $handle->nextnonewline || '') {
+  while ($_ = $handle->nextnonewline) {
     last unless $_;
 
 #  If this is a continuation line, losing any initial whitespace on the fly
@@ -402,8 +402,7 @@ sub _process_parts {
 #    Add this line to the text for this part
 
     } elsif (my $processor =
-     $self->{ref($self).'::mimeproc'}->{$type} ||
-     $mimeprocessor->{$type} || '') {
+     $self->{ref($self).'::mimeproc'}->{$type} || $mimeprocessor->{$type}) {
       my $thistext = '';
       while ($_ = $handle->next) {
         last if substr($_,0,$boundarylength) eq $boundary;
