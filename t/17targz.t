@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 42 }
+BEGIN { plan tests => 46 }
 END {
   ok(0) unless $loaded;
   system( "rm -rf $temp/*; rmdir $temp" ) if $temp;
@@ -633,11 +633,28 @@ ok($targz);
 # 39 Create a targz from the mbox
 ok($targz->add_mbox( $mbox ));
 
-# 40 Check if we can create a resource file
+# 40 Check if storable count works
+eval 'use Storable ()';
+$Storable::VERSION ||= '';
+my $skip = $Storable::VERSION ? '' : 'Skipping because Storable not available';
+skip($skip,$targz->count_storable == 7);
+
+# 41 Check if file was created
+my $countfile = "$targzdir/count.gz";
+skip($skip,-e $countfile);
+my $size = -s _;
+
+# 42 Check if second count works still
+skip($skip,$targz->count_storable == 7);
+
+# 43 Check if tarfile didn't change this time
+skip($skip,$size == -s $countfile);
+
+# 44 Check if we can create a resource file
 my $resource = $targz->Resource;
 ok($resource);
 
-# 41 Check if it has the right XML
+# 45 Check if it has the right XML
 $resource->xml unless ok($resource->xml,<<EOD);
 <?xml version="1.0" encoding="iso-8859-1"?>
 <ntv:resource xmlns:ntv="http://www.nextrieve.com/1.0">
@@ -651,7 +668,7 @@ $resource->xml unless ok($resource->xml,<<EOD);
 </ntv:resource>
 EOD
 
-# 42 Check if the docseq is what we expect it to be
+# 46 Check if the docseq is what we expect it to be
 undef( $targz );
 $docseqxml = $ntv->slurp( $ntv->openfile( $stream ) );
 warn $docseqxml unless ok($docseqxml,<<EOD);

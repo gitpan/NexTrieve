@@ -1,3 +1,47 @@
+0.31	25 March 2002
+	Refined the internal "_resync_news" method to quickly handle "holes"
+	in the message stream.  Now also uses a binary chop approach to find
+	the last message that's on the news server that is already in the
+	targz.  This all applies to Targz.pm of course.
+
+	24 March 2002
+	Added and documented method "add_news" to Targz.pm.  Takes a Net::NNTP
+	object and reads messages from there, adding them to the targz.
+	Handles re-syncing with newsgroups by a mix of date and message-id
+	checks.
+
+	Added and documented method "name" to Targz.pm.  Added and documented
+	method "count_storable", which is the same as "count" but uses the
+	Storable module for persistency to prevent having to unpack tarfiles
+	that haven't changed.  Added checks to test-suite.
+
+	Modified internal method "auto_clean" to "no_auto_clean" and documented
+	it.  Modified internal method "clean" to only work as an object method
+	and documented it.  Both in Targz.pm.
+
+	Simplified some internals in Targz.pm.  The tar program must now also
+	be able to handle the "--directory" directive.
+
+	23 March 2002
+	Added and documented a "tarfile" method to Targz.pm.
+
+	Made the datestamp checking routine in Targz.pm a little smarter so
+	that it now also recognizes and handles NNTP-Posting-Date: and
+	X-Trace: headers.
+
+	Added support for an external hash to "count" method of Targz.pm:
+	using an external hash can make things a lot faster because it does
+	not need to read tar-files that haven't changed.
+
+	Made directory parameter to Targz method of NexTrieve.pm default to
+	the current directory.
+
+	22 March 2002
+	Adapted the undocumented "files" method of Docseq.pm so that it can
+	accept a processor routine parameter.  Also documented the method now.
+	It is now useful as a basic conversion feature for any type of
+	conversion by other modules.
+
 0.30	18 March 2002
 	First version of Targz.pm completed including documentation.  You
 	can now quickly store both messages as well as unix mailboxes in the

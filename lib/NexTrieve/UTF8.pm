@@ -10,7 +10,7 @@ package NexTrieve::UTF8;
 
 use strict;
 @NexTrieve::UTF8::ISA = qw(NexTrieve);
-$NexTrieve::UTF8::VERSION = '0.30';
+$NexTrieve::UTF8::VERSION = '0.31';
 
 # Return true value for use
 

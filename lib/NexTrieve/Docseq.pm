@@ -6,7 +6,7 @@ package NexTrieve::Docseq;
 
 use strict;
 @NexTrieve::Docseq::ISA = qw(NexTrieve);
-$NexTrieve::Docseq::VERSION = '0.30';
+$NexTrieve::Docseq::VERSION = '0.31';
 
 # Use all the Perl modules needed here
 
@@ -134,13 +134,35 @@ sub encoding {
 sub files {
 
 # Obtain the object
+# Obtain the processor if any
 # Obtain the NexTrieve object
-# Loop for all the parameters, create Document objects and add to the Docseq
-# Return the object
 
   my $self = shift;
+  my $processor = ref($_[0]) eq 'CODE' ? shift : '';
   my $ntv = $self->NexTrieve;
-  $self->add( $ntv->Document->read_file( $_ ) ) foreach @_;
+
+# If we have a processor routine
+#  For all of the files specified
+#   Obtain the data for that file
+#   Reloop of nothing was fetched
+#   Add documents for everything that is returned by the processor routine
+
+  if ($processor) {
+    foreach my $file (@_) {
+      my $data = $self->slurp( $self->openfile( $file,'<' ) );
+      next unless length($data);
+      $self->add( $ntv->Document( $_ ) ) foreach &{$processor}( $data );
+    }
+
+# Else (no processor routine, just a simple copy)
+#  Loop for all the parameters, create Document objects and add to the Docseq
+
+  } else {
+    $self->add( $ntv->Document->read_file( $_ ) ) foreach @_;
+  }
+
+# Return the object
+
   return $self;
 } #files
 
@@ -493,6 +515,27 @@ the handle that was used for writing to the stream.
 
 Calling the "done" method is not strictly necessary.  As soon as the object
 goes out of scope, a call to "done" is done autmatically.
+
+=head2 files
+
+ $docseq->files( <files.xml> );
+ $docseq->files( \&processor,<files.anydata> );
+
+The "files" method allows you to add one or more external files containing
+data to be added to a document sequence.  These could be pre-made XML files,
+or files containing any other type of data that need to be processed first
+before being added to the document sequence.
+
+The first (optional) input parameter specifies a reference to a processor
+routine that will take the contents of the file as its input parameter.  It
+should return zero or more XML-containers, one for each document to be added
+to the document sequence.
+
+The other input parameters specify the names of the files that should be
+read and passed into the document sequence.
+
+The Docseq object itself is returned by this method, which makes it handy
+for one-liners.
 
 =head2 stream
 

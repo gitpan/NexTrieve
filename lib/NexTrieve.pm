@@ -6,7 +6,7 @@ package NexTrieve;
 
 use strict;
 @NexTrieve::ISA = qw();
-$NexTrieve::VERSION = '0.30';
+$NexTrieve::VERSION = '0.31';
 
 # Use the external modules that we need always
 
@@ -234,6 +234,7 @@ sub DBI { 'NexTrieve::DBI'->_new( @_ ) } #DBI
 
 # As a "class" method
 #  IN: 1 ref to method/parameters hash
+#      2..N filename/xml specification
 # OUT: 1 instantiated NexTrieve::Docseq object
 
 # as an object method
@@ -282,6 +283,7 @@ sub Docseq {
 
 # as a "class" method
 #  IN: 1 ref to method/parameters hash
+#      2..N filename/xml specification
 # OUT: 1 instantiated NexTrieve::Document object
 
 # as an "object" method
@@ -299,7 +301,8 @@ sub Document {
 
   my $self = shift;
   my $class = ref($self);
-  return 'NexTrieve::Document'->_new( $self,@_ ) if $class eq 'NexTrieve';
+  return 'NexTrieve::Document'->_new_from_filename_xml( $self,@_ )
+   if $class eq 'NexTrieve';
 
 # Create a new Document object with the encoding set
 
