@@ -6,7 +6,7 @@ package NexTrieve::Daemon;
 
 use strict;
 @NexTrieve::Daemon::ISA = qw(NexTrieve);
-$NexTrieve::Daemon::VERSION = '0.01';
+$NexTrieve::Daemon::VERSION = '0.02';
 
 # Use all the other NexTrieve modules that we need always
 
@@ -34,13 +34,15 @@ sub _new {
 # Handle the resource specification if there is any
 # Handle the serverport specification if there is any
 # Handle any method calls
-# Return the object
 
   my $class = shift;
   my $self = $class->SUPER::_new( shift );
   $self->Resource( shift ) if @_;
   $self->serverport( shift ) if @_ and !ref($_[0]);
   $self->Set( shift ) if ref($_[0]);
+
+# Return the object
+
   return $self;
 } #_new
 
@@ -117,7 +119,7 @@ sub serverport { shift->_class_variable( 'serverport',@_ ) } #serverport
 
 #  IN: 1 server:port specification
 #      2 user under which to execute as (default: no change)
-# OUT: 1 0 if success, >0 if error
+# OUT: 1 the object itself
 
 sub start {
 
@@ -129,7 +131,7 @@ sub start {
   my $self = shift;
   my $class = ref($self);
   my ($command,$log,$indexdir) = $self->_command_log( 'ntvsearchd' );
-  return unless $command;
+  return $self unless $command;
 
 # Obtain the serverport specification
 # Obtain the server and port
@@ -158,25 +160,17 @@ sub start {
      $command = "$command -A $server -P $port -L $log$user 2>/dev/null";
     my $exit = system( $command );
 
-#  If there was a problem
-#   Add error
-#  Else
-#   Store the pidfile and the pid in the object
-#  Return the exit status
+#  Add error if there was a problem
+#  Return the object
 
-    if ($exit) {
-      $self->_add_error( "Exit status from '$command': $exit" );
-    } else {
-      sleep( 1 );
-      $self->_pid( $indexdir,$port );
-    }
-    return $exit;
+    $self->_add_error( "Exit status from '$command': $exit" ) if $exit;
+    return $self;
   }
 
-# Add error and return
+# Add error and return the object
 
   $self->_add_error( "Don't know on which port to start daemon" );
-  return 1;
+  return $self;
 } #start
 
 #------------------------------------------------------------------------
@@ -275,12 +269,21 @@ sub _pid {
   my $port = shift;
 
 # Create the name of the PIDfile
+# Try this 5 times
+#  Outloop if the pidfile exists
+#  Wait for a second (server might be starting)
+
+  my $pidfile = $self->{$class.'::pidfile'} = "$indexdir/pid.$port.ntv";
+  foreach( 1..5 ) {
+    last if -e $pidfile;
+    sleep( 1 );
+  }
+
 # Open the PIDfile
 # Read the first line
 # Close the PIDfile
 # Return the PID
 
-  my $pidfile = $self->{$class.'::pidfile'} = "$indexdir/pid.$port.ntv";
   my $handle = $self->openfile( $pidfile );
   my $pid = $self->{$class.'::pid'} = <$handle>;
   close( $handle );

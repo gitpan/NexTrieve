@@ -6,7 +6,7 @@ package NexTrieve::Querylog;
 
 use strict;
 @NexTrieve::Querylog::ISA = qw(NexTrieve);
-$NexTrieve::Querylog::VERSION = '0.01';
+$NexTrieve::Querylog::VERSION = '0.02';
 
 # Use all of the NexTrieve submodules that we need for sure
 
@@ -37,32 +37,7 @@ sub _new {
 
 #------------------------------------------------------------------------
 
-# The following methods change the object
-
-#------------------------------------------------------------------------
-
-#  IN: 1 new filename specification
-# OUT: 1 current/old filename specification
-
-sub filename {
-
-# Obtain the handle
-
-  my $self = shift;
-
-# If there is a new filename
-#  Obtain the class
-#  Delete the handle (if any)
-
-  if (@_) {
-    my $class = ref($self);
-    delete( $self->{$class.'::handle'} );
-  }
-
-# Handle as a normal setting/returning
-
-  return $self->_class_variable( 'filename',@_ );
-} #filename
+# The folloing methods return objects
 
 #------------------------------------------------------------------------
 
@@ -72,37 +47,99 @@ sub filename {
 sub Query {
 
 # Obtain the object
-# Obtain the class
+# Obtain the field name
+# Return now if there are no more queries
 
   my $self = shift;
-  my $class = ref($self);
+  my $field = ref($self).'::NEXT';
+  return unless exists( $self->{$field} );
 
-# Initialize the handle
+# Remember the current setting
+# Process the next one
+# Return what we had
+
+  my $list = $self->{$field};
+  $self->_next;
+  return wantarray ? @{$list} : $list->[0];
+} #Query
+
+#------------------------------------------------------------------------
+
+# The following methods change the object
+
+#------------------------------------------------------------------------
+
+# OUT: 1 flag whether at end of query logfile
+
+sub eof { !exists( $_[0]->{ref(shift).'::NEXT'} ) } #eof
+
+#------------------------------------------------------------------------
+
+#  IN: 1 new filename specification
+# OUT: 1 current/old filename specification
+
+sub filename {
+
+# Obtain the object
+
+  my $self = shift;
+
+# If we have new parameters
+#  Obtain the handle
+#  Get first query if we have a handle
+
+  if (@_) {
+    $self->_handle( my $handle = $self->openfile( shift ) || '' );
+    $self->_next if $handle;
+  }
+
+# Handle as a normal setting/returning
+
+  return $self->_class_variable( 'filename',@_ );
+} #filename
+
+#------------------------------------------------------------------------
+
+# The following subroutines are for internal use only
+
+#------------------------------------------------------------------------
+
+#  IN: 1 new handle specification
+# OUT: 1 current/old handle specification
+
+sub _handle { shift->_class_variable( 'handle',@_ ) } #_handle
+
+#------------------------------------------------------------------------
+
+sub _next {
+
+# Obtain the object
+# Set the field name to be used
+
+  my $self = shift;
+  my $field = ref($self).'::NEXT';
+
+# Obtain the handle
 # If we don't have a handle yet
-#  If there is a filename
-#   Attempt to open the file, saving handle on the fly
-#   Return now if there is no handle
-#  Else
-#   Add error to object and return
+#  Add error to object and return
 
-  my $handle;
-  unless ($handle = $self->_handle || '') {
-    if (my $filename = $self->filename) {
-      $self->_handle( $handle = $self->openfile( $filename ) );
-      return unless $handle;
-    } else {
-      $self->_add_error( "Don't know which querylog file to open" );
-      return;
-    }
+  my $handle = $self->_handle;
+  unless ($handle) {
+    $self->_add_error( "Don't know which querylog file to open" );
+    return;
   }
 
 # Until we have a valid object
 #  Obtain the time value
-#  Return now if failed
+#  If failed
+#   Remove the next object and return
 
   while (1) {
     chomp( my $localtime = <$handle> || '' );
-    return unless $localtime;
+    unless ($localtime) {
+      delete( $self->{$field} );
+      return;
+    }
 
 #  Initialize the XML
 #  While there are lines to be read
@@ -121,24 +158,12 @@ sub Query {
 <ntv:query xmlns:ntv="http://www.nextrieve.com/1.0" type="exact" totalhits="1" longform="0" showattributes="0" showpreviews="1">ping</ntv:query>
 EOD
 
-#  Create the query object
-#  Return the result of the creation of the query from the XML
+#  Save the query object as the next object to be returned and return
 
-    my $query = $self->NexTrieve->Query( $xml );
-    return wantarray ? ($query,$localtime) : $query;
+    $self->{$field} = [$self->NexTrieve->Query( $xml ),$localtime];
+    return;
   }
 } #Query
-
-#------------------------------------------------------------------------
-
-# The following subroutines are for internal use only
-
-#------------------------------------------------------------------------
-
-#  IN: 1 new handle specification
-# OUT: 1 current/old handle specification
-
-sub _handle { shift->_class_variable( 'handle',@_ ) } #_handle
 
 #------------------------------------------------------------------------
 
@@ -154,6 +179,10 @@ NexTrieve::Querylog - handle NexTrieve as a querylog
  $ntv = NexTrieve->new( | {method => value} );
  $querylog = $ntv->Querylog( file | $resource );
 
+ while (!$querylog->eof) {
+   $query = $querylog->Query;
+ }
+
 =head1 DESCRIPTION
 
 The Querylog object of the Perl support for NexTrieve.  Do not create
@@ -166,6 +195,10 @@ These methods are available to the NexTrieve::Querylog object.
 =head2 Query
 
  ($query,$localtime) = $querylog->Query;
+
+=head2 eof
+
+ $atendoffile = $querylog->eof;
 
 =head2 filename
 

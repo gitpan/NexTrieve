@@ -6,7 +6,7 @@ package NexTrieve::Search;
 
 use strict;
 @NexTrieve::Search::ISA = qw(NexTrieve);
-$NexTrieve::Search::VERSION = '0.01';
+$NexTrieve::Search::VERSION = '0.02';
 
 # Use other NexTrieve modules that we need always
 
@@ -25,6 +25,7 @@ use NexTrieve::Resource ();
 
 #  IN: 1 NexTrieve object
 #      2 server:port or filename or XML or Resource or Daemon object
+#      3 reference to method/value pairs
 
 sub _new {
 
@@ -35,10 +36,14 @@ sub _new {
   my $self = $class->SUPER::_new( shift );
 
 # Handle the resource specification if there is any
-# Return the object
+# Handle any method/value pair setting
 
   $self->Resource( ref($_[0]) eq 'NexTrieve::Daemon' ?
    shift->serverport : shift ) if @_;
+  $self->Set( shift ) if @_;
+
+# Return the object
+
   return $self;
 } #_new
 
@@ -50,7 +55,7 @@ sub executable { -x NexTrieve->new->NexTrievePath.'/ntvsearch' } #executable
 
 #------------------------------------------------------------------------
 
-# The follwing methods return objects
+# The following methods return objects
 
 #------------------------------------------------------------------------
 
@@ -126,12 +131,14 @@ sub Hitlist {
 # Obtain copy of the Resource
 # Initialize the XML of the hitlist
 # If we have a Query object
-#  Obtain the command specification
+#  Obtain the command specification, saving it in the object on the fly
+#  Return now if there is no command
 
   my $resource = $self->{$class.'::Resource'};
   my $hitlistxml;
   if (ref($resource)) {
-    my $command = $self->_command_log( 'ntvsearch' );
+    my $command = $self->{$class.'::command'} =
+     $self->_command_log( 'ntvsearch' );
     return $hitlist unless $command;
 
 #  Save flag for using a temporary file
@@ -155,32 +162,28 @@ sub Hitlist {
     return $hitlist;
 
 # Elseif there is a server/port combination
+#  If we want the file directly written
+#   Do that and return
+
+  } elsif ($resource) {
+    if (!defined(wantarray) and $filename) {
+      $hitlist->ask_server_port_file( $resource,$queryxml,$filename );
+      return;
+    }
+
 #  Obtain the hitlist XML
 #  Write it to a file if necessary
 #  Return the object
 
-  } elsif ($resource) {
-# OPTIMIZE here in void context, direct write to file
     $hitlist->read_string( $hitlist->ask_server_port( $resource,$queryxml ) );
     $hitlist->write_file( $filename ) if $filename;
-    return $hitlist
+    return $hitlist;
   }
 
 # Return error (no resource specification)
 
   return $hitlist->_add_error( 'Must have a resource specification' );
 } #Hitlist
-
-#------------------------------------------------------------------------
-
-# Following methods are for changing the object
-
-#------------------------------------------------------------------------
-
-#  IN: 1 new indexdir override
-# OUT: 1 old/current indexdir override
-
-sub indexdir { shift->_class_variable( 'indexdir',@_ ) } #indexdir
 
 #------------------------------------------------------------------------
 
@@ -240,6 +243,11 @@ These methods are available to the NexTrieve::Search object.
 =head2 Resource
 
  $resource = $search->Resource( | file | xml | {method => value} );
+
+=head2 indexdir
+
+ $search->indexdir( $indexdir );
+ $indexdir = $search->indexdir;
 
 =head1 AUTHOR
 

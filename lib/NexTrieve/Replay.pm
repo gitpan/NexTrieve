@@ -6,7 +6,7 @@ package NexTrieve::Replay;
 
 use strict;
 @NexTrieve::Replay::ISA = qw(NexTrieve);
-$NexTrieve::Replay::VERSION = '0.01';
+$NexTrieve::Replay::VERSION = '0.02';
 
 # Use all of the NexTrieve submodules that we need for sure
 
@@ -19,7 +19,7 @@ use NexTrieve::Search ();
 
 #------------------------------------------------------------------------
 
-# The following methods change the object
+# The following methods return objects
 
 #------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ sub Hitlist {
 #  Add error and return (no object found)
 
   foreach (qw(Querylog Search)) {
-    next if exists $self->{$self.'::'.$_};
+    next if exists $self->{$class.'::'.$_};
     $self->_add_error( "Must have a valid $_ object" );
     return;
   }
@@ -68,6 +68,22 @@ sub Hitlist {
 
 #------------------------------------------------------------------------
 
+# The following objects apply to the object
+
+#------------------------------------------------------------------------
+
+# OUT: 1 external command to be executed for search (daemon)
+
+sub command { shift->Search->command } #command;
+
+#------------------------------------------------------------------------
+
+# OUT: 1 flag whether at end of querylog
+
+sub eof { shift->Querylog->eof } #eof;
+
+#------------------------------------------------------------------------
+
 __END__
 
 =head1 NAME
@@ -79,6 +95,11 @@ NexTrieve::Replay - replay Querylog objects against Search objects
  use NexTrieve;
  $ntv = NexTrieve->new( | {method => value} );
  $replay = $ntv->Replay( {method => value} );
+
+ $replay = $ntv->Replay( {Search => $search, Querylog => $querylog} );
+ while (!$replay->eof) {
+   $hitlist = $replay->Hitlist;
+ }
 
 =head1 DESCRIPTION
 
@@ -102,6 +123,14 @@ These methods are available to the NexTrieve::Replay object.
 
  $replay->Search( $ntv->Search( $resource | server:port | port ) );
  $search = $replay->Search;
+
+=head2 command
+
+ $command = $replay->command;
+
+=head2 eof
+
+ $isnowatend = $replay->eof;
 
 =head1 AUTHOR
 

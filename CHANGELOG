@@ -1,0 +1,35 @@
+0.02	20 January 2002
+	$daemon->pid now waits for a max of 5 seconds to see whether the
+	pid-file appears, before returning with an error.
+
+	$daemon->start now returns the object itself: since the return value
+	of starting the daemon is of little value anyway, it makes more sense
+	to return the object, so that you can do one-liners.
+
+	Fixed problem in $ntv->anyport: older IO::Socket::INET _must_ have a
+	Listen specification, apparently.
+
+	Fixed problem in NexTrieve::Docseq: apparently a string resembling a	
+	a namespace is illegal as an unquoted key value in a hash reference
+	specification in perl 5.005.
+
+	Changed various test from direct comparisons to just checking whether
+	the object was created without errors: that should teach me not to
+	depend on the order of keys in a hash.
+
+	Fixed problem in NexTrieve.pm with perl 5.005: $object->$method
+	apparently _must_ be $object->$method();
+
+	Fixed problem with $ntv->Search not setting method/value pairs.
+
+	Added "command" method to NexTrieve::Replay;
+
+	Added "eof" methods to NexTrieve::Querylog and NexTrieve::Replay.
+
+0.01	19 January 2002
+	First upload to CPAN.
+
+	First version for the 2.X generation of NexTrieve.  Some code and
+	concepts were used from the old Nextrieve.pm module (note the
+	lowercase t) that was written by me in 1995 and heavily used by
+	all search engines of customers of xxLINK.

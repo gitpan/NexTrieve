@@ -6,7 +6,7 @@ package NexTrieve;
 
 use strict;
 @NexTrieve::ISA = qw();
-$NexTrieve::VERSION = '0.01';
+$NexTrieve::VERSION = '0.02';
 
 # Use the external modules that we need
 
@@ -434,7 +434,7 @@ sub Get {
 
   if (defined(wantarray)) {
     foreach my $method (@_) {
-      push( @value,scalar($self->$method) );
+      push( @value,scalar($self->$method()) );
     }
     return @value;
   }
@@ -445,7 +445,7 @@ sub Get {
 
   my $namespace = caller().'::';
   foreach my $method (@_) {
-    ${$namespace.$method} = $self->$method;
+    ${$namespace.$method} = $self->$method();
   }
 } #Get
 
@@ -608,6 +608,7 @@ sub anyport {
 
   my $self = shift;
   my $port = IO::Socket::INET->new(
+   Listen => 5,
    LocalAddr => (shift || 'localhost')
   )->sockport;
 
@@ -627,26 +628,89 @@ sub anyport {
 sub ask_server_port {
 
 # Obtain the object
-# Obtain the server:port specification
-# Set the default host if only a port number specified
+# Attempt to open a socket there
+# Return now if failed
 
   my $self = shift;
-  my $serverport = shift;
-  $serverport = "localhost:$serverport" if $serverport =~ m#^\d+$#;
-
-# Attempt to open a socket there
-# Return object with error if failed
-
-  my $socket = IO::Socket::INET->new( $serverport );
-  return $self->_add_error( "Error connecting to $serverport: $@" )
-   unless $socket;
+  my $socket = $self->_socket( shift );
+  return unless $socket;
 
 #  Send the commands
 #  Read the result and return (close socket upon going out of scope)
 
   print $socket scalar(shift);
-  return join('',<$socket>);
+  return join('',<$socket>); # is this the most efficient way memory wise?
 } #ask_server_port
+
+#-------------------------------------------------------------------------
+
+#  IN: 1 server:port or port specification
+#      2 data to send to server:port
+#      3 file handle to write result to
+
+sub ask_server_port_fh {
+
+# Obtain the object
+# Attempt to open a socket there
+# Return now if failed
+
+  my $self = shift;
+  my $socket = $self->_socket( shift );
+  return unless $socket;
+
+# Obtain the query
+# Obtain the handle
+# If there is no handle
+#  Add error and return
+
+  my $query = shift;
+  my $handle = shift;
+  unless ($handle) {
+    $self->_add_error( "Must have a handle to write output of socket to" );
+    return;
+  }
+
+#  Send the commands
+#  Read the result and return (close socket upon going out of scope)
+
+  print $socket $query;
+  print $handle $_ while <$socket>; # the most efficient way memory wise?
+} #ask_server_port_fh
+
+#-------------------------------------------------------------------------
+
+#  IN: 1 server:port or port specification
+#      2 data to send to server:port
+#      3 filename to write result to
+
+sub ask_server_port_file {
+
+# Obtain the object
+# Obtain the serverport
+# Obtain the query
+
+  my $self = shift;
+  my $serverport = shift;
+  my $query = shift;
+
+# Obtain the filename
+# If there is no filename
+#  Add error and return
+# Attempt to open the file (will be closed upon going out of scope)
+# Return now if failed
+
+  my $filename = shift;
+  unless ($filename) {
+    $self->_add_error( "Must have a filename to write output of socket to" );
+    return;
+  }
+  my $handle = $self->openfile( $filename,'>' );
+  return unless $handle;
+
+# Return whatever was returned from the handle version
+
+  return $self->ask_server_port_fh( $serverport,$query,$handle );
+} #ask_server_port_file
 
 #-------------------------------------------------------------------------
 
@@ -1376,6 +1440,31 @@ sub _command_log {
   $self->{ref($self).'::READFROM'} = -e $log ? -s _ : 0;
   return ($command,$log,$indexdir);
 } #_command_log
+
+#-------------------------------------------------------------------------
+
+#  IN: 1 server:port or port specification
+# OUT: 1 socket (undef if error)
+
+sub _socket {
+
+# Obtain the object
+# Obtain the server:port specification
+# Set the default host if only a port number specified
+
+  my $self = shift;
+  my $serverport = shift;
+  $serverport = "localhost:$serverport" if $serverport =~ m#^\d+$#;
+
+# Attempt to open a socket there
+# Set error if failed
+# Return whatever we got
+
+  my $socket = IO::Socket::INET->new( $serverport );
+  $self->_add_error( "Error connecting to $serverport: $@" )
+   unless $socket;
+  return $socket;
+} #_socket
 
 #-------------------------------------------------------------------------
 

@@ -113,7 +113,7 @@ unlink( <$querylogdir/*> );
 
 # 18 Check if we can start a new daemon
 my $port = $ntv->anyport;
-ok(!$ntv->Daemon( $resource,$port )->start); # lose the object right away
+ok($ntv->Daemon( $resource,$port )->start->pid); # lose the object right away
 
 # 19 Check if we can ping a new daemon
 $daemon = $ntv->Daemon( $resource,$port );
@@ -133,7 +133,7 @@ $querylog = $ntv->Querylog( <$querylogdir/*> );
 ok($querylog and !$querylog->Errors);
 
 # 23 Check first query (is a ping, should be ignored)
-ok(!$querylog->Query);
+ok($querylog->eof);
 
 # cleanup everything
 sleep( 1 );

@@ -1,5 +1,7 @@
 Check Collection: are all subobjects working correctly?
 
+Add support for query caching server coniguration.
+
 Add ultralite support to NexTrieve::Resource?
 
 Add module "Issue" that is capable of keeping multiple issues of an indexdir

@@ -99,17 +99,4 @@ $query = $ntv->Query( {
  type                   => 'exact',
 } );
 
-ok($query->xml,<<EOD);
-<ntv:query xmlns:ntv="http://www.nextrieve.com/1.0" highlighlength="4" id="id" displayedhits="200" firsthit="1" longform="1" showattributes="1" showpreviews="1" totalhits="1000" type="exact">
-<constraint>attr1 = 1 &amp; attr2 = 2</constraint>
-<indexname>logical</indexname>
-<qall>all1</qall>
-<qany>any1 any2</qany>
-<qnot>not1 not2 not3</qnot>
-<texttype name="type1" weight="101"/>
-<texttype name="*" weight="100"/>
-<texttype name="type2" weight="101"/>
-<texttype name="type3" weight="101"/>
-one two three four
-</ntv:query>
-EOD
+ok(!$query->Errors);

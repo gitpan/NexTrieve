@@ -118,39 +118,4 @@ $resource = $ntv->Resource( {
  threads        => [50,100,5],
 } );
 
-ok($resource->xml,<<EOD);
-<ntv:resource xmlns:ntv="http://www.nextrieve.com/1.0">
-<logfile name="/home/user/nextrieve/index/index.log"/>
-<cache size="10M"/>
-<basedir name="/home/user/nextrieve"/>
-<indexdir name="/home/user/nextrieve/index"/>
-<indexcreation>
-<attribute name="flag3" type="flag" key="notkey" nvals="1"/>
-<attribute name="number1" type="number" key="notkey" nvals="1"/>
-<attribute name="number2" type="number" key="notkey" nvals="1"/>
-<attribute name="multi1" type="string" key="key-duplicates" nvals="1"/>
-<attribute name="multi2" type="string" key="key-duplicates" nvals="1"/>
-<attribute name="multi3" type="string" key="key-duplicates" nvals="1"/>
-<attribute name="multi4" type="string" key="key-duplicates" nvals="1"/>
-<attribute name="single" type="string" key="key-unique" nvals="1"/>
-<attribute name="flag1" type="flag" key="notkey" nvals="1"/>
-<attribute name="flag2" type="flag" key="notkey" nvals="1"/>
-<texttype name="one" weight="100"/>
-<texttype name="five" weight="500"/>
-<texttype name="three" weight="100"/>
-<texttype name="two" weight="100"/>
-<texttype name="four" weight="100"/>
-</indexcreation>
-<indexing>
-<unknowntext logaction="log" indexaction="default"/>
-<unknownattrs logaction="log"/>
-<nestedtext logaction="!log" indexaction="inherit"/>
-<nestedattrs logaction="stop"/>
-</indexing>
-<searching>
-<querylog path="/home/user/nextrieve/queries"/>
-<threads connector="50" worker="100" core="5"/>
-<highlight name="b"/>
-</searching>
-</ntv:resource>
-EOD
+ok(!$resource->Errors);

@@ -6,7 +6,7 @@ package NexTrieve::Docseq;
 
 use strict;
 @NexTrieve::Docseq::ISA = qw(NexTrieve);
-$NexTrieve::Docseq::VERSION = '0.01';
+$NexTrieve::Docseq::VERSION = '0.02';
 
 # Initialize the list of texttype keys
 
@@ -35,7 +35,7 @@ my %dispatch; %dispatch = (
 		        ) #join
 		       }, #sub
 
- NexTrieve::Document => sub {$_[0]->write_string},
+ 'NexTrieve::Document' => sub {$_[0]->write_string}, # must be in quotes 5.005
 
  SCALAR		=> sub {${$_[0]}},
 );
@@ -67,7 +67,7 @@ sub add {
   if (exists( $self->{$class} )) {
     foreach my $chunk (@_) {
       $self->_pipe( \&{$dispatch{ref($chunk)} || sub {
-       $self->_add_error( "Cannot handle chunk of type ".ref($_[0]) );
+       $self->_add_error( "Cannot handle chunk of type '".ref($chunk)."'" );
        return;} }($chunk) || '' );
     }
 
@@ -319,7 +319,7 @@ sub _add_chunks {
 
   foreach my $chunk (@{$self->{ref($self).'::sequence'}}) {
     $$refxml .= &{$dispatch{ref($chunk)} || sub {
-     $self->_add_error( "Cannot handle chunk of type ".ref($_[0]) );
+     $self->_add_error( "Cannot handle chunk of type '".ref($chunk)."'" );
      return;} }($chunk) || '';
   }
 } #_add_chunks
