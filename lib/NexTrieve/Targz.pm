@@ -6,7 +6,7 @@ package NexTrieve::Targz;
 
 use strict;
 @NexTrieve::Targz::ISA = qw(NexTrieve);
-$NexTrieve::Targz::VERSION = '0.34';
+$NexTrieve::Targz::VERSION = '0.35';
 
 # Make sure we use the modules that we need here
 
@@ -132,7 +132,7 @@ sub RFC822 {
 
 #  IN: 1..N names of files or references to lists of files to be added
 #           (default: all files with .new extension in directory)
-# OUT: 1 whether successful
+# OUT: 1 number of files added
 
 sub add_file {
 
@@ -160,15 +160,17 @@ sub add_file {
 
   unless (chdir( $directory )) {
     $self->_add_error( "Cannot chdir to $directory" );
-    return;
+    return 0;
   }
   (my $name = $directory) =~ s#^.*/##;
 
 # Initialize the list of files to be unlinked upon success
 # Obtain the remove original flag
+# Initializ number of files handled
 
   my @unlink;
   my $rm_original = $self->rm_original;
+  my $files = 0;
 
 # For all of the parameters specified
 #  Create a reference to it if it is not a reference to a list, else use that
@@ -177,7 +179,7 @@ sub add_file {
 #   Attempt to open the file
 #   Reloop if failed
 
-  foreach my $element (@_ ? @_ : <*.new>) {
+  foreach my $element (@_ ? @_ : <$directory/*.new>) {
     my $list = ref($element) eq 'ARRAY' ? $element : [$element];
     foreach (@{$list}) {
       my $filename = m#^/# ? $_ : "$cwd/$_";
@@ -188,6 +190,7 @@ sub add_file {
 #   Attempt to obtain a time value for this message
 #   If we don't have a time
 #    Add error message and reloop
+#   Incement number of files handled
 #   Handle all the stuff needed for this file, reloop if ok
 #   Return now indicating error
 
@@ -197,8 +200,9 @@ sub add_file {
 #        $self->_add_error( "Could not determine originating time of $_" );
         next;
       }
+      $files++;
       next if _handle_file( $self,$directory,$name,$filename,$time,\%ordinal );
-      return '';
+      return $files-1;
     }
   }
 
@@ -210,7 +214,7 @@ sub add_file {
   _finish_add( $self,$directory,$name,\%ordinal,$rfc822,$docseq );
   chdir( $cwd );
   unlink( @unlink ) if @unlink;
-  return 1;
+  return $files;
 } #add_file
 
 #------------------------------------------------------------------------

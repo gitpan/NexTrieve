@@ -33,6 +33,8 @@ script/docseq
 script/html2ntvml
 script/mailbox2ntvml
 script/pdf2ntvml
+script/targz_collect
+script/targz_count
 t/01basic.t
 t/02collection.t
 t/03resource.t

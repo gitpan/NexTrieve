@@ -1,3 +1,13 @@
+0.35	26 April 2002
+	Updated some omissions to the NexTrieve.pm documentation.
+
+	Added scripts "targz_collect" and "targz_count".
+
+	Fixed errors caused by differently operating "pdftotext" program on
+	some systems in the test-suite of PDF.pm.
+
+	Fixed problem with new default case of "add_file" of Targz.pm.
+
 0.34	25 April 2002
 	Added default case to "add_file" of Targz.pm to more easily handle
 	incoming mail messages.

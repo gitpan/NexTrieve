@@ -6,7 +6,7 @@ package NexTrieve;
 
 use strict;
 @NexTrieve::ISA = qw();
-$NexTrieve::VERSION = '0.34';
+$NexTrieve::VERSION = '0.35';
 
 # Use the external modules that we need always
 
@@ -4144,6 +4144,9 @@ The following scripts are part of the distribution:
  dbi2ntvml	convert SQL statement to a document sequence using DBI
  html2ntvml	convert one or more HTML-files to a document sequence
  mailbox2ntvml	convert one or more Unix mailboxes to a document sequence
+ pdf2ntvml	convert one or more PDF-files to a document sequence
+ targz_collect  collect new messages into Targz archive(s)
+ targz_count	count number of messages in Targz archive(s)
 
 =head1 SELECTIVE SUBMODULE LOADING
 
@@ -4588,6 +4591,9 @@ sequence as described in
 
 The (optional) input parameter can be a reference to a hash or list of
 method-value pairs as handled by the L<Set> method.
+
+This object is extensively used by the "targz_collect" and "targz_count"
+scripts.
 
 =head1 CONVENIENCE METHODS
 

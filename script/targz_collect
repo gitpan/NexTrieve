@@ -1,0 +1,104 @@
+#!/usr/bin/perl -w
+
+#-------------------------------------------------------------------------
+
+# Make sure we pre-declare everything
+# Use the necessary Perl modules
+
+use strict;
+use NexTrieve qw(Targz);
+
+# Output warning if it is the wrong version
+
+warn <<EOD if $NexTrieve::VERSION ne '0.35';
+$0 is not using the right version of the associated Perl modules.
+Operation of this script may be in error because of this.
+EOD
+
+# Create a NexTrieve object
+# Initialize the list of directories to work with
+
+my $ntv = NexTrieve->new( {PrintError => 1} );
+my @dir;
+
+# If parameters are specified
+#  Use those
+# Else
+#  Read the directory names from standard input
+
+if (@ARGV) {
+  @dir = @ARGV;
+} else {
+  chomp( @dir = <STDIN> );
+}
+
+# Initialize number of messages handled
+# Initialize total number of messages handled
+# Initialize number or directories handled
+
+my $messages;
+my $total = 0;
+my $directories = 0;
+
+# For all of the valid directories specified
+#  Increment number of directories
+#  Process the messages if any
+#  Reloop now if nothing done
+
+foreach my $directory (map {(-d "$_/rfc") ? $_ : ()} @dir) {
+  $directories++;
+  $messages = $ntv->Targz( $directory,{rm_original => 1} )->add_file;
+  next unless $messages;
+
+#  Show the number of messages handled
+#  Add number of messages to total
+
+  print "$directory -> $messages\n";
+  $total += $messages;
+}
+
+# Show the final statistics if any
+
+printf( "Added $total articles to $directories directories (average %.2f)\n",
+$total/$directories ) if $directories;
+
+#-------------------------------------------------------------------------
+
+__END__
+
+=head1 targz_collect
+
+Collect messages stored as *.new files in directories in Targz format.
+
+=head2 Usage
+
+ targz_collect			# all Targz directories in current directory
+
+ targz_collect apache*		# all apache* Targz directories
+
+ find perl* | targz_collect	# all Targz directories with perl* in it
+
+=head1 NOTES
+
+This script only collects messages in the Targz format without creating any
+XML for the messages.  As such it is more an example than a really functional
+script as you would normally have XML and possibly a document sequence created
+as well.
+
+=head1 AUTHOR
+
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
+
+Please report bugs to <perlbugs@dijkmat.nl>.
+
+=head1 COPYRIGHT
+
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+reserved.  This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+http://www.nextrieve.com and the NexTrieve::xxx modules.
+
+=cut
