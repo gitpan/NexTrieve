@@ -6,7 +6,7 @@ package NexTrieve::PDF;
 
 use strict;
 @NexTrieve::PDF::ISA = qw(NexTrieve);
-$NexTrieve::PDF::VERSION = '0.33';
+$NexTrieve::PDF::VERSION = '0.34';
 
 # Use other NexTrieve modules that we need always
 

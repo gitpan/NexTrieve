@@ -13,6 +13,8 @@ Add module "MHonArc" for handling all the messages in a MHonArc archive.
 
 Add module "Mailman" for handling all the messages in a Mailman archive.
 
+Add module "POD" for handling all the POD-files.
+
 Add module "Thread" for adding processor routines that automatically create
 threading information, optionally stored in a backend such as Storable or
 an SQL database.

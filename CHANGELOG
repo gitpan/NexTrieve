@@ -1,3 +1,11 @@
+0.34	25 April 2002
+	Added default case to "add_file" of Targz.pm to more easily handle
+	incoming mail messages.
+
+	5 April 2002
+	Changed some documentation after discussion with Mark Overmeer at the
+	Amsterdam.pm meeting.
+
 0.33	4 April 2002
 	Fixed some annoying errors when manifying <B>T</B>ext sequence by
 	changing that to <B>1</B>234 in HTML.pm, RFC822.pm and Message.pm.

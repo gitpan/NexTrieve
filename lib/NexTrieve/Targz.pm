@@ -6,7 +6,7 @@ package NexTrieve::Targz;
 
 use strict;
 @NexTrieve::Targz::ISA = qw(NexTrieve);
-$NexTrieve::Targz::VERSION = '0.33';
+$NexTrieve::Targz::VERSION = '0.34';
 
 # Make sure we use the modules that we need here
 
@@ -131,6 +131,7 @@ sub RFC822 {
 #------------------------------------------------------------------------
 
 #  IN: 1..N names of files or references to lists of files to be added
+#           (default: all files with .new extension in directory)
 # OUT: 1 whether successful
 
 sub add_file {
@@ -176,7 +177,7 @@ sub add_file {
 #   Attempt to open the file
 #   Reloop if failed
 
-  foreach my $element (@_) {
+  foreach my $element (@_ ? @_ : <*.new>) {
     my $list = ref($element) eq 'ARRAY' ? $element : [$element];
     foreach (@{$list}) {
       my $filename = m#^/# ? $_ : "$cwd/$_";
@@ -1751,12 +1752,18 @@ The following methods change aspects of the NexTrieve::Targz object.
 
 =head2 add_file
 
+  $targz->add_file || die "could not add *.new files\n";;
   $targz->add_file( <files> ) || die "could not add files\n";;
 
 The "add_file" method allows you to add RFC822 messages that are stored in
-seperate files to the targz.  Returns true if successful.  If the
-L<rm_original> method was previously called with a true value, then the files
-specified will be deleted on successful execution of this method.
+seperate files to the targz.  Returns true if successful.
+
+The input parameters can either be filenames or references to lists with
+filenames.  If no input parameters are specified, all files with the extension
+".new" that are stored in the L<directory> will be assumed.
+
+If the L<rm_original> method was previously called with a true value, then the
+files specified will be deleted on successful execution of this method.
 
 =head2 add_mbox
 
