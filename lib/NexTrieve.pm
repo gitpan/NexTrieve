@@ -3,7 +3,7 @@ package NexTrieve;
 # Set version information
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.38';
+$VERSION = '0.39';
 use strict;
 
 # Use the external modules that we need always

@@ -1,3 +1,5 @@
+Add can_ok tests where applicable.
+
 Check Collection: are all subobjects working correctly?
 
 Add support for query caching server configuration.

@@ -9,7 +9,7 @@ package NexTrieve::UTF8;
 # Make sure we do everything by the book from now on
 
 @ISA = qw(NexTrieve);
-$VERSION = '0.38';
+$VERSION = '0.39';
 use strict;
 
 # Satisfy -require-

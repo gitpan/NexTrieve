@@ -3,7 +3,7 @@ package NexTrieve::Overview;
 # Set version information
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.38';
+$VERSION = '0.39';
 use strict;
 
 # Show warning that you shouldn't -use- this module
@@ -41,10 +41,18 @@ NexTrieve to be able to stay competitive with other search engine software
 out there and an initial implementation of "exact searching" was commenced
 by Kim Hendrikse.
 
-In the second half of 2000 a significant financial investment made it possible
-to further develop NexTrieve.  Kim's long time friend and fellow student
-Gordon Clare joined the team in September 2002.  In the period until 2002 the
-following issues with NexTrieve were addressed:
+In July 2000 a financial investment, which in the end became more than 750000
+euro (roughly sevenhundredfiftythousand US$) by Dijkmat BV, a company founded
+by Elizabeth Mattijsen and Wendy G.A. van Dijk, made it possible to further
+develop NexTrieve.  Kim's long time friend and fellow student Gordon Clare
+joined the team in September 2000 and proved to be a welcome creative force
+to extract NexTrieve from the creative slump it had gotten into.
+
+In December 2000 a three-day workshop was organized by Elizabeth in which Kim,
+Gordon and Elizabeth hammered out the design of the Next Generation of
+NexTrieve.  Following that, Gordon implemented most of the new design of
+NexTrieve until March 2002.  The following issues with NexTrieve were
+addressed:
 
  - exact word search (must have word, may have word, must not have word)
  - fuzzy pattern search with exact "assist"
@@ -53,13 +61,16 @@ following issues with NexTrieve were addressed:
  - scalability: gigabytes of content can be indexed on normal PC hardware
  - scalability: load balancing caching query server
  - filters for indexing email and HTML
+ - threaded searching: short queries need not wait for long queries
+ - multiple logical indexes inside a physical index
+ - threaded caching query server
 
 In the beginning of 2002, the new incarnation of NexTrieve had matured enough
 to be released to the general public.  To introduce NexTrieve to the Perl
 community, it was decided that there should be full support for all aspects
 of NexTrieve in Perl.  And thus the family of NexTrieve::xxx Perl modules
-was developed by Elizabeth Mattijsen, a long-time user of the NexTrieve
-search engine software.
+was developed by Elizabeth , a long-time user of the NexTrieve search engine
+software and developer of Perl modules (check author ELIZABETH on CPAN).
 
 =head1 ASPECTS OF NEXTRIEVE COVERED
 

@@ -5,7 +5,7 @@ package NexTrieve::Query;
 # Make sure we do everything by the book from now on
 
 @ISA = qw(NexTrieve);
-$VERSION = '0.38';
+$VERSION = '0.39';
 use strict;
 
 # Initialize the list of texttype keys

@@ -5,7 +5,7 @@ package NexTrieve::Hitlist;
 # Make sure we do everything by the book from now on
 
 @ISA = qw(NexTrieve);
-$VERSION = '0.38';
+$VERSION = '0.39';
 use strict;
 
 # Use all the submodules that we always need

@@ -1,3 +1,17 @@
+0.39	17 January 2003
+	Changed some stuff in the history of NexTrieve in Overview.pm.
+
+	Disabled HTTP-fetch test from t/12html.t because Kim screwed up the
+	NexTrieve website.
+
+	Disabled Mail::Box test in t/16message.t because there is something
+	funny going on there of which I'm not sure whether it is a faulty
+	Mail::Box installlation on my box, or a Mac OS X problem, or a
+	problem in NexTrieve::Message.
+
+	Added support for using "gnutar" instead of "tar" in Targz.pm, so that
+	it passes the test on Mac OS X.
+
 0.38	10 July 2002
 	Re-arranged each top of the module so that fully qualified @ISA and
 	$VERSION are not neccesary anymore.

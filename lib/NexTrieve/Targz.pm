@@ -5,7 +5,7 @@ package NexTrieve::Targz;
 # Make sure we do everything by the book from now on
 
 @ISA = qw(NexTrieve);
-$VERSION = '0.38';
+$VERSION = '0.39';
 use strict;
 
 # Make sure we use the modules that we need here
@@ -15,8 +15,10 @@ use File::Copy qw(copy);
 use NexTrieve::RFC822 ();
 
 # Initialize the new message delimiter
+# Initialize the version of tar to be used
 
 my $newmessagedelimiter = '^From ';
+my $tar = $^O =~ m#^(?:darwin)$# ? 'gnutar' : 'tar';
 
 # Satisfy -require-
 
@@ -843,7 +845,7 @@ EOD
 
   foreach my $datestamp (@{$self->datestamps}) {
     my $handle = $self->openfile(
-     "tar --extract --to-stdout --gunzip --file=$directory/$datestamp.$name.tar.gz |" );
+     "$tar --extract --to-stdout --gunzip --file=$directory/$datestamp.$name.tar.gz |" );
     return '' unless $handle;
 
 #  Initialize the XML for this iteration
@@ -927,7 +929,7 @@ sub _create_tarfile {
   for (my $i = 0; $i <= $last; $i += $step) {
     my $max = $i+$step <= $last ? $i + $step - 1 : $last;
     my $command =
-     "tar $type --remove-files --file=$tarfile.tar.new @{$list}[$i..$max]";
+     "$tar $type --remove-files --file=$tarfile.tar.new @{$list}[$i..$max]";
     if (my $exit = system( $command )) {
       $self->_add_error( "Command '$command' returned status $exit" );
       return '';
@@ -1084,7 +1086,7 @@ sub _extract_tarfile {
   if (defined(wantarray)) {
     if (-e $tarfile and -s _) {
       if (my $handle = $self->openfile(
-       "tar --extract --gunzip --verbose$todir --file=$tarfile|" )) {
+       "$tar --extract --gunzip --verbose$todir --file=$tarfile|" )) {
         chomp( my @file = <$handle> ); @file = sort {$a <=> $b} @file;
         close( $handle );
         return \@file;
@@ -1099,7 +1101,7 @@ sub _extract_tarfile {
 #   Add error
 
   if (-e $tarfile and -s _) {
-    my $command = "tar --extract --gunzip$todir --file=$tarfile";
+    my $command = "$tar --extract --gunzip$todir --file=$tarfile";
     if (my $exit = system( $command )) {
       $self->_add_error( "Command '$command' returned status $exit" );
     }
@@ -1270,7 +1272,7 @@ sub _list_tarfile {
 
   if (-e $tarfile and -s _) {
     if (my $handle =
-     $self->openfile( "tar --list --gunzip --file=$tarfile|" )) {
+     $self->openfile( "$tar --list --gunzip --file=$tarfile|" )) {
       chomp( my @file = <$handle> ); close( $handle );
       return \@file;
     }

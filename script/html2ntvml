@@ -10,7 +10,7 @@ use NexTrieve qw(HTML);
 
 # Output warning if it is the wrong version
 
-warn <<EOD if $NexTrieve::VERSION ne '0.38';
+warn <<EOD if $NexTrieve::VERSION ne '0.39';
 $0 is not using the right version of the associated Perl modules.
 Operation of this script may be in error because of this.
 EOD
