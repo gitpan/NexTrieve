@@ -36,6 +36,7 @@ The following modules are part of the distribution:
  NexTrieve::Message             convert Mail::Message object(s) to document(s)
  NexTrieve::MIME                MIME-type conversions for documents
  NexTrieve::Overview            an overview of NexTrieve and its Perl support
+ NexTrieve::PDF                 convert PDF-file(s) to logical document(s)
  NexTrieve::Query               create/adapt query
  NexTrieve::Querylog            turn query log into Query objects
  NexTrieve::Replay              turn Querylog into Hitlist for a Search

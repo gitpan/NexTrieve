@@ -4,7 +4,7 @@ package NexTrieve::Overview;
 # Set version information
 
 use strict;
-$NexTrieve::Overview::VERSION = '0.32';
+$NexTrieve::Overview::VERSION = '0.33';
 
 # Show warning that you shouldn't -use- this module
 
@@ -69,6 +69,7 @@ oriented interface:
  - creation and maintenance of NexTrieve collections
  - creation and maintenance of NexTrieve resource-files
  - completely customizable conversion of HTML-files to NTVML (NexTrieve XML)
+ - completely customizable conversion of PDF-files to NTVML (NexTrieve XML)
  - completely customizable conversion of email/mailboxes to NTVML
  - completely customizable conversion of DBI statement handles  to NTVML
  - handling conversions from iso-8859-* and windows-125* to UTF-8 internally
@@ -276,10 +277,9 @@ sequences, before they can be indexed and consequently searched.
 
 The programs that do this are generally referred to as "NexTrieve filters"
 or just "filters".  The NexTrieve package itself contains a number of filters
-that convert email boxes and HTML-pages to XML (which is actually done by
-a sub-set of the NexTrieve::xxx Perl modules).  The NexTrieve Perl modules
-contain some more filters, most notably the capability of converting content
-stored in a relational database to a NexTrieve document sequence.
+that convert email boxes, PDF-files and HTML-pages to XML.  The NexTrieve Perl
+modules contain some more filters, most notably the capability of converting
+content stored in a relational database to a NexTrieve document sequence.
 
 =head2 Is the document sequence a real file?
 
@@ -399,7 +399,7 @@ usually uses any of the NexTrieve::xxx modules.
 
                                 NexTrieve
                                     |
-     /-------> NexTrieve::HTML/RFC822/Mbox/Message/DBI/own
+     /-------> NexTrieve::HTML/RFC822/Mbox/Message/DBI/PDF/own
      |                              |
      |                     NexTrieve::Resource
      |                              |
@@ -463,6 +463,7 @@ sequences from several input sources:
  - NexTrieve::HTML      convert HTML-files to document sequence
  - NexTrieve::Mbox      convert messages in Unix mailboxes to docseq
  - NexTrieve::Message   convert Mail::Message object(s) to document(s)
+ - NexTrieve::PDF       convert PDF-files to document sequence
  - NexTrieve::RFC822    convert messages in seperate files to docseq
 
 When you are using the NexTrieve::RFC822 or the NexTrieve::Message module, you

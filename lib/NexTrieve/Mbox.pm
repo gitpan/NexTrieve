@@ -6,7 +6,7 @@ package NexTrieve::Mbox;
 
 use strict;
 @NexTrieve::Mbox::ISA = qw(NexTrieve);
-$NexTrieve::Mbox::VERSION = '0.32';
+$NexTrieve::Mbox::VERSION = '0.33';
 
 # Use other NexTrieve modules that we need always
 
@@ -228,9 +228,9 @@ NexTrieve::Mbox - convert Unix mailbox to NexTrieve Document sequence
  use NexTrieve;
  $ntv = NexTrieve->new( | {method => value} );
 
- $mbox = $ntv->Mbox( | {method => value} );
+ $converter = $ntv->Mbox( | {method => value} );
 
- $docseq = $mbox->Docseq( $ntv->Index( $resource )->Docseq,<*.mbox> );
+ $docseq = $converter->Docseq( $ntv->Index( $resource )->Docseq,<*.mbox> );
  $docseq->done;
 
 =head1 DESCRIPTION
@@ -291,11 +291,11 @@ The following methods return objects.
 
 =head2 Docseq
 
- $docseq = $mbox->Docseq( @mbox );
+ $docseq = $converter->Docseq( @mbox );
  $docseq->write_file( filename );
 
  $index = $ntv->Index( $resource );
- $mbox->Docseq( $index->Docseq,@mbox );
+ $converter->Docseq( $index->Docseq,@mbox );
 
 The Docseq method allows you to create a NexTrieve document sequence object
 (or NexTrieve::Docseq object) out of the messages in one or more Unix
@@ -317,7 +317,7 @@ For more information, see the NexTrieve::Docseq module.
 
 =head2 Resource
 
- $resource = $mbox->Resource( | {method => value} );
+ $resource = $converter->Resource( | {method => value} );
 
 The "Resource" method allows you to create a NexTrieve::Resource object from
 the internal structure of the NexTrieve::L<RFC822>.pm object that lives inside
@@ -328,8 +328,8 @@ NexTrieve::Resource modules itself.
 
 =head2 RFC822
 
- $mbox->RFC822( {method => value} ;
- $rfc822 = $mbox->RFC822;
+ $converter->RFC822( {method => value} ;
+ $rfc822 = $converter->RFC822;
 
 The "RFC822" method allows you to access the NexTrieve::RFC822 object that
 lives inside of the NexTrieve::Mbox object and which is created when the
@@ -347,8 +347,8 @@ The following methods change aspects of the NexTrieve::Mbox object.
 
 =head2 archive
 
- $mbox->archive( $archive );
- $archive = $mbox->archive;
+ $converter->archive( $archive );
+ $archive = $converter->archive;
 
 Although the functionality of the NexTrieve::Mbox module is to just be a
 filter, the "archive" method allows you to do some message archive management
@@ -361,8 +361,8 @@ L<baseoffset> method, a basic email management system can be made.
 
 =head2 baseoffset
 
- $mbox->baseoffset( $offset | -e filename ? -s _ : 0 );
- $baseoffset = $mbox->baseoffset;
+ $converter->baseoffset( $offset | -e filename ? -s _ : 0 );
+ $baseoffset = $converter->baseoffset;
 
 The "baseoffset" method can only be used if the L<conceptualmailbox> method
 is also used.  It specifies the value of the "offset" attribute of the first
@@ -372,8 +372,8 @@ can e.g. specify with the L<archive> method.
 
 =head2 conceptualmailbox
 
- $mbox->conceptualmailbox( filename );
- $conceptualmailbox = $mbox->conceptualmailbox;
+ $converter->conceptualmailbox( filename );
+ $conceptualmailbox = $converter->conceptualmailbox;
 
 The "conceptualmailbox" method allows you to specify the value that should
 be saved in the "mailbox" attribute of all messages processed by this

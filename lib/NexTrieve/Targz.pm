@@ -6,7 +6,7 @@ package NexTrieve::Targz;
 
 use strict;
 @NexTrieve::Targz::ISA = qw(NexTrieve);
-$NexTrieve::Targz::VERSION = '0.32';
+$NexTrieve::Targz::VERSION = '0.33';
 
 # Make sure we use the modules that we need here
 
@@ -321,18 +321,24 @@ sub add_mbox {
 #------------------------------------------------------------------------
 
 #  IN: 1 Net::NNTP object for fetching news messages from
+#      2 (optional) reference to subroutine to create Net::NNTP object
 # OUT: 1 whether successful
+#      2 possibly adapted Net::NNTP object
 
 sub add_news {
 
 # Obtain the object
 # Obtain the Net::NNTP object
+# Obtain the way to make a Net::NNTP object
+
+  my $self = shift;
+  my $nntp = shift;
+  my $newnntp = shift;
+
 # Obtain the class
 # Obtain the RFC822 object if any
 # Obtain the Docseq object if any
 
-  my $self = shift;
-  my $nntp = shift;
   my $class = ref($self);
   my $rfc822 = $self->{$class.'::rfc822'} || '';
   my $docseq = $self->{$class.'::docseq'} || '';
@@ -352,11 +358,13 @@ sub add_news {
   (my $newsgroup = $directory) =~ s#^.*/##;
 
 # Initialize the hash with ordinals
+# Initialize number of messages
 # Obtain the ordinal number of first and last message to fetch
 
   my %ordinal;
   my $messages = 0;
-  my ($first,$last) = _resync_news( $self,$nntp,$newsgroup );
+  my ($first,$last);
+  ($first,$last,$nntp) = _resync_news( $self,$nntp,$newsgroup,$newnntp );
 
 # For all of the messages
 #  Obtain the message
@@ -385,7 +393,7 @@ sub add_news {
       $messages++;
       next;
     }
-    return '';
+    return wantarray ? ('',$nntp) : '';
   }
 
 # Finish up the adding process
@@ -394,7 +402,7 @@ sub add_news {
 
   _finish_add( $self,$directory,$newsgroup,\%ordinal,$rfc822,$docseq );
   chdir( $cwd );
-  return $messages;
+  return wantarray ? ($messages,$nntp) : $messages;
 } #add_news
 
 #------------------------------------------------------------------------
@@ -1316,11 +1324,12 @@ sub _message_ids {
 #      3 name of newsgroup (default: name of targz)
 # OUT: 1 ordinal number of first message to fetch
 #      2 ordinal number of last message to fetch
+#      3 (possibly adapted) Net::NNTP object
 
 sub _resync_news {
 
 # Obtain the object
-# Obtain the Net::NNTP object
+# Initialize the Net::NNTP object to work on
 # Obtain the newsgroup name
 
   my $self = shift;
@@ -1328,10 +1337,20 @@ sub _resync_news {
   my $newsgroup = shift || $self->name;
 
 # Obtain the number of articles and the ordinal numbers
-# Return now if nothing to be done
+# If we didn't get any information at all (assume stale NNTP object)
+#  If there is code to create a new NNTP object
+#   Obtain the new NNTP object
+#   Obtain articles and ordinals if there is a new NNTP object
+#  Return now if nothing to be done
 
-  my ($articles,$first,$last) = $nntp->group( $newsgroup );
-  return (0,-1) unless $articles || '';
+  my ($articles,$first,$last) = $nntp ? $nntp->group( $newsgroup ) : ();
+  if (!defined($articles)) {
+    if (my $newnntp = shift || '') {
+      $nntp = &{$newnntp};
+      ($articles,$first,$last) = $nntp->group( $newsgroup ) if $nntp;
+    } 
+    return (0,-1,$nntp) unless $articles || '';
+  }
 
 # Initialize the hash of headers fetched
 # Initialize the hash of associated times
@@ -1349,7 +1368,7 @@ sub _resync_news {
 
   if (my $head = $head{$first} ||= $nntp->head( $first )) {
     if (my $time = $time{$first} ||= _epoch( $head )) {
-      return ($first,$last) if _datestamp( $time ) > $lastdate;
+      return ($first,$last,$nntp) if _datestamp( $time ) > $lastdate;
     }
   }
 
@@ -1444,7 +1463,7 @@ sub _resync_news {
       if (my $time = $time{$check} ||= _epoch( $head )) {
         if (my ($id) = grep( s#^message-id:\s*<?(.*?)>?\n$#$1#si,@{$head} )) {
           my $datestamp = _datestamp( $time );
-          return ($check+1,$last) if $datestamp < $lastdate-1;
+          return ($check+1,$last,$nntp) if $datestamp < $lastdate-1;
 
 #     Obtain the message-id:s that we have for this datestamp
 #     For all of the ID's of this datestamp
@@ -1453,7 +1472,7 @@ sub _resync_news {
 
           my @id = @{$ids{$datestamp} ||= _message_ids( $self,$datestamp )};
           foreach (@id) {
-            return ($check+1,$last) if $_ eq $id;
+            return ($check+1,$last,$nntp) if $_ eq $id;
           }
         }
       }
@@ -1463,7 +1482,7 @@ sub _resync_news {
 
 # Return the result, do them all
 
-  return ($first,$last);
+  return ($first,$last,$nntp);
 } #_resync_news
 
 #------------------------------------------------------------------------
@@ -1750,12 +1769,27 @@ files specified will be deleted on successful execution of this method.
 
 =head2 add_news
 
-  $targz->add_news( $nntp ) || die "could not add news\n";;
+  $targz->add_news( $nntp ) || die "could not add news\n";
 
-The "add_news" method allows you to add RFC822 messages from a news server.
-The input parameter specifies the Net::NNTP object that should be used to
-obtain messages from the newsgroup of the L<name> of the targz.  Returns the
-number of messages that were successfully obtained.
+  ($messages,$nntp) = $targz->add_news( $nntp,\&create_NNTP );
+  die "could not add news\n" unless $messages =~ m#^\d+$#;
+
+The "add_news" method allows you to add RFC822 messages from a news (NNTP)
+server.
+
+The first input parameter specifies the Net::NNTP object that should be used to
+obtain messages from the newsgroup of the L<name> of the targz.
+
+The optional second input parameter specifies a reference to an (anonymous)
+subroutine that can be called to create the Net::NNTP object.  This is
+especially handy when reading a lot of newsgroups with the same Net::NNTP
+object: some news servers let the connection go stale after a while: by
+specifying this parameter you allow the add_news method to recover from such
+a situation automatically.
+
+Returns the number of messages that were successfully obtained in a scaler
+context.  In a list context, the second output parameter is the possibly
+adapted Net::NNTP object that was passed as the first input parameter.
 
 =head2 clean
 

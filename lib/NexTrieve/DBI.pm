@@ -6,7 +6,7 @@ package NexTrieve::DBI;
 
 use strict;
 @NexTrieve::DBI::ISA = qw(NexTrieve);
-$NexTrieve::DBI::VERSION = '0.32';
+$NexTrieve::DBI::VERSION = '0.33';
 
 # Use the modules that are needed always
 
@@ -106,9 +106,9 @@ NexTrieve::DBI - convert DBI statement handle to NexTrieve Document sequence
  use NexTrieve;
  $ntv = NexTrieve->new( | {method => value} );
 
- $dbi = $ntv->DBI( | {method => value} );
+ $converter = $ntv->DBI( | {method => value} );
 
- $docseq = $dbi->Docseq( $ntv->Index( $resource )->Docseq,$sth );
+ $docseq = $converter->Docseq( $ntv->Index( $resource )->Docseq,$sth );
  $docseq->done;
 
 =head1 DESCRIPTION
@@ -178,10 +178,10 @@ These methods create objects from the NexTrieve::DBI object.
 
 =head2 Docseq
 
- $docseq = $dbi->Docseq( $sth,'id','text','ampersandize','fetchrow_hashref' );
+ $docseq = $converter->Docseq( $sth,'id','text','ampersandize','fetchrow_hashref' );
 
  $index = $ntv->Index( $resource );
- $dbi->Docseq( $index->Docseq,$sth,'id','text','ampersandize','fetchrow_hashref' );
+ $converter->Docseq( $index->Docseq,$sth,'id','text','ampersandize','fetchrow_hashref' );
 
 The Docseq method allows you to create a NexTrieve document sequence object
 (or NexTrieve::Docseq object) out of a DBI statement handle.  This can either
@@ -222,7 +222,7 @@ For more information, see the NexTrieve::Docseq module.
 
 =head2 Resource
 
- $resource = $dbi->Resource( | {method => value} );
+ $resource = $converter->Resource( | {method => value} );
 
 The "Resource" method allows you to create a NexTrieve::Resource object from
 the internal structure of the NexTrieve::DBI.pm object.  More specifically,
@@ -240,7 +240,7 @@ These methods change aspects of the NexTrieve::DBI object.
 
 =head2 attribute_processor
 
- $dbi->attribute_processor( 'attribute', key | sub {} );
+ $converter->attribute_processor( 'attribute', key | sub {} );
 
 The "attribute_processor" allows you to specify a subroutine that will process
 the contents of a specific attribute before it becomes serialized in XML.
@@ -254,15 +254,15 @@ L<PROCESSOR ROUTINES> for more information.
 
 =head2 DefaultInputEncoding
 
- $encoding = $dbi->DefaultInputEncoding;
- $dbi->DefaultInputEncoding( encoding );
+ $encoding = $converter->DefaultInputEncoding;
+ $converter->DefaultInputEncoding( encoding );
 
 See the NexTrieve.pm module for more information about the
 "DefaultInputEncoding" method.
 
 =head2 extra_attribute
 
- $dbi->extra_attribute( [\$var | sub {}, attribute spec] | 'reset' );
+ $converter->extra_attribute( [\$var | sub {}, attribute spec] | 'reset' );
 
 The "extra_attribute" method specifies one or more attributes that should be
 added to the serialized XML, created from sources outside of the original
@@ -294,7 +294,7 @@ of the object.
 
 =head2 extra_texttype
 
- $dbi->extra_texttype( [\$var | sub {}, texttype spec] | 'reset' );
+ $converter->extra_texttype( [\$var | sub {}, texttype spec] | 'reset' );
 
 The "extra_texttype" method specifies one or more texttypes that should be
 added to the serialized XML, created from sources outside of the original
@@ -326,8 +326,8 @@ of the object.
 
 =head2 fetch
 
- $dbi->fetch( 'fetchrow_hashref' );
- $fetch = $dbi->fetch;
+ $converter->fetch( 'fetchrow_hashref' );
+ $fetch = $converter->fetch;
 
 The "fetch" method indicates the name of the method that should be executed
 on the statement handle to obtain a reference to a hash.  By default, the name
@@ -340,7 +340,7 @@ L<Document> method is not capable of processing the "fetchrow_hashref" method.
 
 =head2 field2attribute
 
- $dbi->field2attribute( 'title','date',['id',attribute spec] );
+ $converter->field2attribute( 'title','date',['id',attribute spec] );
 
 The "field2attribute" specifies how a key in the content hash should be mapped
 to an attribute in the serialized XML.
@@ -363,7 +363,7 @@ cause a complete resource-specification if the L<Resource> method is called.
 
 =head2 field2texttype
 
- $dbi->field2texttype( 'title',[qw(description whatitis 200)],'keywords' );
+ $converter->field2texttype( 'title',[qw(description whatitis 200)],'keywords' );
 
 The "field2texttype" specifies how a key in the content hash should be mapped
 to a texttype in the serialized XML.
@@ -387,8 +387,8 @@ method is called.
 
 =head2 id
 
- $dbi->id( 'id' );
- $id = $dbi->id;
+ $converter->id( 'id' );
+ $id = $converter->id;
 
 The "id" method specifies which field in the reference to the hash returned
 by the L<fetch> method, should be considered to be the "id" identifying this
@@ -396,8 +396,8 @@ particular record.  By default, the name "id" is assumed.
 
 =head2 normalize
 
- $dbi->normalize( 'ampersandize' );
- $normalize = $dbi->normalize;
+ $converter->normalize( 'ampersandize' );
+ $normalize = $converter->normalize;
 
 Before any text that is obtained from the statement handle is allowed to be
 inserted into XML, it needs to be normalized so that no invalid XML can be
@@ -417,8 +417,8 @@ By default, "ampersandize" is assumed.
 
 =head2 text
 
- $dbi->text( 'text' );
- $text = $dbi->text;
+ $converter->text( 'text' );
+ $text = $converter->text;
 
 The "text" method specifies which field in the reference to the hash returned
 by the L<fetch> method, should be considered to be the "text".  The content of
@@ -427,7 +427,7 @@ default, the name "text" is assumed.
 
 =head2 texttype_processor
 
- $dbi->texttype_processor( 'attribute', key | sub {} );
+ $converter->texttype_processor( 'attribute', key | sub {} );
 
 The "texttype_processor" allows you to specify a subroutine that will process
 the contents of a specific texttype before it becomes serialized in XML.

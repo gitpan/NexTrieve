@@ -6,7 +6,7 @@ package NexTrieve;
 
 use strict;
 @NexTrieve::ISA = qw();
-$NexTrieve::VERSION = '0.32';
+$NexTrieve::VERSION = '0.33';
 
 # Use the external modules that we need always
 
@@ -388,6 +388,13 @@ sub NexTrieve { _variable( shift,'Nextrieve' ) } #NexTrieve
 
 #-------------------------------------------------------------------------
 
+#  IN: 1 ref to hash with methods and values
+# OUT: 1 instantiated NexTrieve::PDF object
+
+sub PDF { 'NexTrieve::PDF'->_new( @_ ) } #PDF
+
+#-------------------------------------------------------------------------
+
 #  IN: 1 filename or xml (optional)
 # OUT: 1 instantiated NexTrieve::Query object
 
@@ -434,7 +441,7 @@ sub Resource {
 # Elseif we have a DBI, HTML or RFC822 Resource request
 #  Create an empty resource object
 
-  } elsif ($class =~ m#^NexTrieve::(?:DBI|HTML|Message|RFC822)$#) {
+  } elsif ($class =~ m#^NexTrieve::(?:DBI|HTML|Message|PDF|RFC822)$#) {
     my $resource = $self->NexTrieve->Resource;
 
 #  For both attributes and texttypes
@@ -2457,6 +2464,58 @@ sub _fetch_direct {
 
 #------------------------------------------------------------------------
 
+#  IN: 1 id we need to fetch content for
+#      2 type of fetch to perform
+# OUT: 1 filename fetched into
+#      2 id to be used
+#      3 epoch time of last modification (when applicable)
+#      4 source of information (when applicable)
+
+sub _fetch_file {
+
+# Obtain the object
+# Obtain the filename we need to work on
+# Obtain the type of fetch we need to do
+
+  my $self = shift;
+  my $filename = shift;
+  my $type = shift || '';
+
+# If we are working with a local file
+#  Return now if we only want the filename
+#  Obtain the id
+#  Obtain the last modified stuff
+#  Return now with all the parameters
+
+  if ($type eq 'file' or (!ref($filename) and $filename !~ m#\n#s)) {
+    return $filename unless wantarray;
+    my $id = $filename =~ s#:(\w+)$## ? $1 : $filename;
+    my $lastmod = (stat($filename))[9];
+    return ($filename,$id,$lastmod,$filename);
+  }
+
+# Obtain the content
+# If there was no content
+#  Return now
+
+  my ($content,$id,$lastmod,$source) = $self->_fetch_content( $filename,$type );
+  unless ($content) {
+    return wantarray ? ('',$id,'') : '';
+  }
+
+# Obtain a temporary filename
+# Write the contents there
+# Save the filename for automatic destruction
+# Return the parameters
+
+  $filename = $self->tempfilename( 'fetch' );
+  $self->splat( $self->openfile( $filename,'>' ),$content );
+  push( @{$self->{'unlink'}},$filename );
+  return wantarray ? ($filename,$id,$lastmod,$source) : $filename;
+} #_fetch_file
+
+#------------------------------------------------------------------------
+
 #  IN: 1 indication of content to fetch
 # OUT: 1 content fetched
 #      2 id to be used
@@ -3867,6 +3926,17 @@ sub _iconv {
 
 #-------------------------------------------------------------------------
 
+sub DESTROY {
+
+# Obtain the object
+# Unlink any files that should be removed
+
+  my $self = shift;
+  unlink( @{$self->{'unlink'}} ) if exists $self->{'unlink'};
+} #DESTROY
+
+#-------------------------------------------------------------------------
+
 #  IN: 1..N submodules to include (default = all)
 
 sub import {
@@ -3896,6 +3966,7 @@ sub import {
    Mbox
    Message
    MIME
+   PDF
    Query
    Querylog
    Replay
@@ -4057,6 +4128,7 @@ The following modules are part of the distribution:
  NexTrieve::Message		convert Mail::Message object(s) to document(s)
  NexTrieve::MIME		MIME-type conversions for documents
  NexTrieve::Overview            an overview of NexTrieve and its Perl support
+ NexTrieve::PDF                 convert PDF-files(s) to logical document(s)
  NexTrieve::Query		create/adapt query
  NexTrieve::Querylog		turn query log into Query objects
  NexTrieve::Replay		turn Querylog into Hitlist for a Search
@@ -4278,6 +4350,20 @@ be assumed to be the server specification.
 The third (optional) input parameter can be a reference to a hash or
 list of method-value pairs as handled by the L<Set> method.
 
+=head2 DBI
+
+ $converter = $ntv->DBI( {method => value} );
+
+Create a "NexTrieve::DBI" object for performing a conversion from DBI statement
+handles to NexTrieve::L<Document> objects as part of a document sequence as
+described in "http://www.nextrieve.com/usermanual/2.0.0/ntvindexerxml.stm".
+
+The (optional) input parameter can be a reference to a hash or list of
+method-value pairs as handled by the L<Set> method.
+
+This object is extensively used by the "dbi2ntvml" script.  It is also
+capable of creating L<Docseq> and L<Resource> objects.
+
 =head2 Docseq
 
  $docseq = $ntv->Docseq( {method => value} );
@@ -4288,8 +4374,8 @@ described in "http://www.nextrieve.com/usermanual/2.0.0/ntvindexerxml.stm".
 The (optional) input parameter can be a reference to a hash or list of
 method-value pairs as handled by the L<Set> method.
 
-Please note that the L<HTML> and L<Mbox> objects are also capable of creating
-NexTrieve::Docseq objects.
+Please note that the L<DBI>, L<HTML>, L<Mbox>, L<Message>, L<PDF> and
+L<RFC822> objects are also capable of creating NexTrieve::Docseq objects.
 
 =head2 Document
 
@@ -4319,7 +4405,7 @@ NexTrieve::L<Search> object.
 
 =head2 HTML
 
- $html = $ntv->HTML( {method => value} );
+ $converter = $ntv->HTML( {method => value} );
 
 Create a "NexTrieve::HTML" object for performing a conversion from HTML-files
 to NexTrieve::L<Document> objects as part of a document sequence as described in
@@ -4356,7 +4442,7 @@ stored in a NexTrieve index.
 
 =head2 Mbox
 
- $mbox = $ntv->Mbox( {method => value} );
+ $converter = $ntv->Mbox( {method => value} );
 
 Create a "NexTrieve::Mbox" object for performing a conversion from messages
 as defined by L<RFC822>, stored in a Unix mailbox, to NexTrieve::L<Document>
@@ -4371,7 +4457,7 @@ capable of creating L<Docseq> objects.
 
 =head2 Message
 
- $message = $ntv->Message( {method => value} );
+ $converter = $ntv->Message( {method => value} );
 
 Create a "NexTrieve::Message" object for performing a conversion from
 Mail::Message objects to NexTrieve::L<Document> objects as part of a document
@@ -4382,7 +4468,22 @@ The (optional) input parameter can be a reference to a hash or list of
 method-value pairs as handled by the L<Set> method.
 
 This object is usually used in conjunction with the Mail::Box object, which
-is part of the Mail::Box package as available on CPAN.
+is part of the Mail::Box package as available on CPAN.  It is also capable of
+creating L<Docseq> and L<Resource> objects.
+
+=head2 PDF
+
+ $converter = $ntv->PDF( {method => value} );
+
+Create a "NexTrieve::PDF" object for performing a conversion from PDF-files
+to NexTrieve::L<Document> objects as part of a document sequence as described in
+"http://www.nextrieve.com/usermanual/2.0.0/ntvindexerxml.stm".
+
+The (optional) input parameter can be a reference to a hash or list of
+method-value pairs as handled by the L<Set> method.
+
+This object is extensively used by the "pdf2ntvml" script.  It is also
+capable of creating L<Docseq> and L<Resource> objects.
 
 =head2 Query
 
@@ -4437,12 +4538,12 @@ resource XML specication, or the resource XML specification as a value.
 The second (optional) input parameter can be a reference to a hash or
 list of method-value pairs as handled by the L<Set> method.
 
-Please note that the L<HTML> and L<RFC822> objects are also capable of creating
-NexTrieve::Resource objects.
+Please note that the L<DBI>, L<HTML>, L<Mbox>, L<Message>, L<PDF> and
+L<RFC822> objects are also capable of creating NexTrieve::Resource objects.
 
 =head2 RFC822
 
- $rfc822 = $ntv->RFC822( {method => value} );
+ $converter = $ntv->RFC822( {method => value} );
 
 Create a "NexTrieve::RFC822" object for performing a conversion from messages
 in the format as described by RFC 822 to NexTrieve::L<Document> objects as

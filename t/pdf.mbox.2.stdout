@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<mailbox>t/pdf.mbox</mailbox>
+<offset>0</offset>
+<length>10276</length>
+<date>20020404</date>
+<from>you</from>
+<subject>Voila!</subject>
+</attributes>
+<text>
+<subject>Voila!</subject>
+this is the PDF
+</text>
+</document>
+</ntv:docseq>

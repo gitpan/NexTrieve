@@ -6,7 +6,7 @@ package NexTrieve::MIME;
 
 use strict;
 @NexTrieve::MIME::ISA = qw(NexTrieve);
-$NexTrieve::MIME::VERSION = '0.32';
+$NexTrieve::MIME::VERSION = '0.33';
 
 # Use other NexTrieve modules that we need always
 
@@ -21,9 +21,10 @@ my $removecontainers = NexTrieve->_default_removecontainers;
 # Initialize the hash with routines for handling the text
 
 my %mimeprocessor = (
- 'text/html'    => \&_html,
- 'text/plain'   => \&_plain,
- 'text/x-diff'  => \&_plain,
+ 'application/pdf'	=> \&_pdf,
+ 'text/html'		=> \&_html,
+ 'text/plain'		=> \&_plain,
+ 'text/x-diff'		=> \&_plain,
 );
 
 # Return true value for use
@@ -134,6 +135,62 @@ sub _html {
 #      4 document object
 # OUT: 1 text to be added to the XML
 
+sub _pdf {
+
+# Obtain the parameters
+# Return now if nothing to do
+
+  my ($self,$pdf,$encoding,$document) = @_;
+  return '' unless length($pdf);
+
+# Create the temporary filename
+# Write the content there
+# Return now if failed
+
+  my $filename = $self->tempfilename( 'MIME_pdf' );
+  $self->splat( $self->openfile( $filename,'>' ),$pdf );
+  return '' unless -e $filename;
+
+# Obtain the converted text
+# Remove the temporary file
+# Return now if nothing was returned
+
+  my $text = $self->slurp( $self->openfile( "pdftotext -raw $filename - |" ) );
+  unlink( $filename );
+  return '' unless length($text);
+
+# If there is a character encoding in this part
+#  If there is a document encoding already
+#   Adjust the character encoding if they are different
+#  Else (no document encoding yet)
+#   Set the document encoding to this
+
+  if ($encoding) {
+    if (my $documentencoding = $document->encoding) {
+      $text = $document->recode($documentencoding,$text,$encoding)
+       if $encoding ne $documentencoding;
+    } else {
+      $document->encoding( $encoding );
+    }
+  }
+
+# Make sure the text is valid XML
+# Clean out text completely if only whitespace
+# Return the adapted text
+
+  $self->ampersandize( $text );
+  $text =~ s#^\s+$##s;
+  return $text;
+} #_pdf
+
+#------------------------------------------------------------------------
+
+#  IN: 1 object
+#      2 text to process
+#      3 encoding found for this part
+#      4 document object
+# OUT: 1 text to be added to the XML
+
 sub _plain {
 
 # Obtain the parameters
@@ -201,6 +258,7 @@ conversion from a MIME-type to XML-ready text.
 
 The following subroutines are currently available:
 
+ _pdf        convert from PDF using "pdftotext" program
  _plain      convert from plain text
  _html       convert from HTML
 

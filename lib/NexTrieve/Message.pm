@@ -6,7 +6,7 @@ package NexTrieve::Message;
 
 use strict;
 @NexTrieve::Message::ISA = qw(NexTrieve);
-$NexTrieve::Message::VERSION = '0.32';
+$NexTrieve::Message::VERSION = '0.33';
 
 # Use other NexTrieve modules that we need always
 
@@ -252,18 +252,18 @@ NexTrieve::Message - convert Mail::Message object(s) to document(s)
  use Mail::Box::Manager;
  use NexTrieve;
  $ntv = NexTrieve->new( | {method => value} );
- $message = $ntv->Message( | {method => value} );
+ $converter = $ntv->Message( | {method => value} );
 
  $mgr = Mail::Box::Manager->new;
  $folder = $mgr->open( folder => anymailbox );
 
- $document = $message->Document( $folder->[0] ); # first message only
+ $document = $converter->Document( $folder->[0] ); # first message only
 
- $docseq = $message->Docseq( $folder->messages ); # all messages in a folder
+ $docseq = $converter->Docseq( $folder->messages ); # all messages in a folder
  $docseq->write_file( filename ); # saved as document sequence in file
 
  $docseq = $ntv->Index( $resource )->Docseq; # index on the fly
- $message->Docseq( $docseq,$folder->messages ); # all messages in a folder
+ $converter->Docseq( $docseq,$folder->messages ); # all messages in a folder
  $docseq->done;
 
 =head1 DESCRIPTION
@@ -360,11 +360,11 @@ These methods create objects from the NexTrieve::Message object.
 
  $mgr = Mail::Box::Manager->new;
  $folder = $mgr->open( folder => filename );
- $docseq = $message->Docseq( $folder->messages );
+ $docseq = $converter->Docseq( $folder->messages );
  $docseq->write_file( filename );
 
  $index = $ntv->Index( $resource );
- $message->Docseq( $index->Docseq,$folder->messages );
+ $converter->Docseq( $index->Docseq,$folder->messages );
 
 The Docseq method allows you to create a NexTrieve document sequence object
 (or NexTrieve::Docseq object) out of one or more Mail::Message objects.  This
@@ -388,7 +388,7 @@ NexTrieve::Mbox module.
 
 =head2 Document
 
- $document = $message->Document( $message );
+ $document = $converter->Document( $message );
 
 The Document method performs the actual conversion from an RFC822-formatted
 message contained in a Mail::Message object to XML and returns a
@@ -399,7 +399,7 @@ The input parameter specifies the Mail::Message object to be converted.
 
 =head2 Resource
 
- $resource = $message->Resource( | {method => value} );
+ $resource = $converter->Resource( | {method => value} );
 
 The "Resource" method allows you to create a NexTrieve::Resource object from
 the internal structure of the NexTrieve::Message.pm object.  More specifically,
@@ -417,7 +417,7 @@ These methods change aspects of the NexTrieve::HTML object.
 
 =head2 attribute_processor
 
- $message->attribute_processor( 'attribute', key | sub {} );
+ $converter->attribute_processor( 'attribute', key | sub {} );
 
 The "attribute_processor" allows you to specify a subroutine that will process
 the contents of a specific attribute before it becomes serialized in XML.
@@ -431,8 +431,8 @@ L<PROCESSOR ROUTINES> for more information.
 
 =head2 binarycheck
 
- $html->binarycheck( true | false );
- $binarycheck = $html->binarycheck;
+ $converter->binarycheck( true | false );
+ $binarycheck = $converter->binarycheck;
 
 The "binarycheck" method sets a flag in the object to indicate whether a
 check for binary content should be performed.  If the flag is set and binary
@@ -445,24 +445,24 @@ listed are really messages, it is probably a good idea to set this flag.
 
 =head2 DefaultInputEncoding
 
- $encoding = $message->DefaultInputEncoding;
- $message->DefaultInputEncoding( encoding );
+ $encoding = $converter->DefaultInputEncoding;
+ $converter->DefaultInputEncoding( encoding );
 
 See the NexTrieve.pm module for more information about the
 "DefaultInputEncoding" method.
 
 =head2 displaycontainers
 
- $message->displaycontainers( qw(a b em font i strike strong tt u) );
- @displaycontainer= $message->displaycontainers;
+ $converter->displaycontainers( qw(a b em font i strike strong tt u) );
+ @displaycontainer= $converter->displaycontainers;
 
 The "displaycontainers" method specifies which HTML-tags should be considered
 HTML-tags that have to do with the display of HTML, rather than with the
 structure of HTML.  During the conversion from any part of the message
 considered to be HTML to XML, all HTML-tags that are considered to be display
-containers, are completelyb removed from the HTML.  This causes the HTML
-"<B>T</B>ext" to be converted to the single word "Text" rather than to two
-words "T ext".
+containers, are completely removed from the HTML.  This causes the HTML
+"<B>1</B>234" to be converted to the single word "1234" rather than to two
+words "1 234".
 
 Please note that all HTML-tags that are not known to be display containers,
 or removable containers (see L<removecontainers>) are completely removed from
@@ -472,7 +472,7 @@ The default display containers are: a b em font i strike strong tt u .
 
 =head2 extra_attribute
 
- $message->extra_attribute( [\$var | sub {}, attribute spec] | 'reset' );
+ $converter->extra_attribute( [\$var | sub {}, attribute spec] | 'reset' );
 
 The "extra_attribute" method specifies one or more attributes that should be
 added to the serialized XML, created from sources outside of the original
@@ -504,7 +504,7 @@ of the object.
 
 =head2 extra_texttype
 
- $message->extra_texttype( [\$var | sub {}, texttype spec] | 'reset' );
+ $converter->extra_texttype( [\$var | sub {}, texttype spec] | 'reset' );
 
 The "extra_texttype" method specifies one or more texttypes that should be
 added to the serialized XML, created from sources outside of the original
@@ -536,7 +536,7 @@ of the object.
 
 =head2 field2attribute
 
- $html->field2attribute( 'subject','date',['id',attribute spec] );
+ $converter->field2attribute( 'subject','date',['id',attribute spec] );
 
 The "field2attribute" specifies how a key in the content hash should be mapped
 to an attribute in the serialized XML.
@@ -559,7 +559,7 @@ cause a complete resource-specification if the L<Resource> method is called.
 
 =head2 field2texttype
 
- $html->field2texttype( 'from',[qw(subject title 200)],'to' );
+ $converter->field2texttype( 'from',[qw(subject title 200)],'to' );
 
 The "field2texttype" specifies how a key in the content hash should be mapped
 to a texttype in the serialized XML.
@@ -583,7 +583,7 @@ method is called.
 
 =head2 mailsimple
 
- $html->mailsimple;
+ $converter->mailsimple;
 
 The "mailsimple" method is a convenience method for quickly setting up
 L<field2attribute> and L<field2texttype> mappings.  It is intended to handle
@@ -598,8 +598,8 @@ one-liners.
 
 =head2 removecontainers
 
- $message->removecontainers( qw(embed script) );
- @removecontainer= $message->removecontainers;
+ $converter->removecontainers( qw(embed script) );
+ @removecontainer= $converter->removecontainers;
 
 The "removecontainers" method specifies which HTML-tags, and their content,
 should be removed from the HTML when converting any HTML found in a message
@@ -610,7 +610,7 @@ The default HTML-tags are: embed script .
 
 =head2 texttype_processor
 
- $message->texttype_processor( 'attribute', key | sub {} );
+ $converter->texttype_processor( 'attribute', key | sub {} );
 
 The "texttype_processor" allows you to specify a subroutine that will process
 the contents of a specific texttype before it becomes serialized in XML.

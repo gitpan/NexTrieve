@@ -6,7 +6,7 @@
 # Use the necessary Perl modules
 
 use strict;
-use NexTrieve qw(HTML);
+use NexTrieve qw(PDF);
 
 # Output warning if it is the wrong version
 
@@ -30,21 +30,15 @@ if (@ARGV==0 and -t STDIN) {
   exit;
 }
 
-# Initialize the ASP-style tags preprocessor
 # Initialize the bare XML flag
-# Initialize the binary check flag
 # Initialize the default encoding
-# Initialize the PHP-style tags preprocessor
 # Initialize the maximum title length
 # Initialize the list of files
 # Define the flag to be used
 
-my $asp = '';
 my $bare = '';
-my $binarycheck = '';
 my $defaultencoding = 'iso-8859-1';
 my $nopi = '';
-my $php = '';
 my $titlemax = '';
 my @file = ();
 my $flag;
@@ -60,11 +54,8 @@ my $flag;
 foreach (@ARGV) {
   if (m#^-(\w)#) {
     $flag = $1;
-    $asp = 1, $flag = '' if $flag eq 'a';
     $bare = 1, $flag = '' if $flag eq 'b';
-    $binarycheck = 1, $flag = '' if $flag eq 'i';
     $nopi = 1, $flag = '' if $flag eq 'n';
-    $php = 1, $flag = '' if $flag eq 'p';
     next;
   }
   die "Must specify type of parameter first\n" unless $flag;
@@ -108,20 +99,14 @@ if (@file) {
 }
 
 # Set the default encoding if there is one specified
-# Create the HTML object
-# Set the ASP-style check flag if set
-# Set the binary check flag if set
-# Set the PHP-style check flag if set
+# Create the converter object
 # If the maximum length of the title as an attribute is limited
 #  Set the limitation with an attribute processor
 
 $ntv->DefaultInputEncoding( $defaultencoding ) if $defaultencoding;
-my $html = $ntv->HTML->htmlsimple;
-$html->asp( $asp ) if $asp;
-$html->binarycheck( $binarycheck ) if $binarycheck;
-$html->php( $php ) if $php;
+my $converter = $ntv->PDF->pdfsimple;
 if ($titlemax) {
-  $html->attribute_processor( ['title',sub {substr($_[0],0,$titlemax)}] );
+  $converter->attribute_processor( ['title',sub {substr($_[0],0,$titlemax)}] );
 }
 
 # Create the docseq object
@@ -134,15 +119,15 @@ my $docseq = $ntv->Docseq;
 $docseq->bare( $bare ) if $bare;
 $docseq->nopi( $nopi ) if $nopi;
 $docseq->stream;
-$html->Docseq( $docseq,@file )->done;
+$converter->Docseq( $docseq,@file )->done;
 
 #-------------------------------------------------------------------------
 
 __END__
 
-=head1 html2ntvml [-i] [-E defaultinputencoding] [-a] [-b] [-p] [-n] [-t 256] [-f files]
+=head1 pdf2ntvml [-E defaultinputencoding] [-b] [-n] [-t 256] [-f files]
 
-HTML to XML converter for use with NexTrieve.
+PDF to XML converter for use with NexTrieve.
 
 =head2 Attributes
 
@@ -154,32 +139,16 @@ XML <title> attribute contains the title of the HTML-file (if any)
 
 XML <title> text-type contains the title of the HTML-file (if any)
 
-XML <description> text-type contains the text that was found in the CONTENT=
-attribute of the HTML <META> tag with the name "DESCRIPTION".
-
-XML <keywords> text-type contains the text that was found in the CONTENT=
-attribute of the HTML <META> tag with the name "KEYWORDS".
-
-=head2 Javascript
-
-Any text within an HTML <SCRIPT> container is ignored.
-
-=head2 Text
-
-Any text in any other HTML container is added to the XML <text> container.
-
 =head2 Example Output
 
  <document>
   <attributes>
-   <filename>index.html</filename>
-   <title>Index of contents</title>
+   <filename>example.pdf</filename>
+   <title>Example</title>
   </attributes>
   <text>
-   <title>Index of contents</title>
-   <description>Description of file found in meta tags</description>
-   <keywords>Keywords of file found in meta tags</keywords>
-   Text found in the body of the file
+   <title>Example</title>
+   Text found in the PDF-file
   </text>
  </document>
 
@@ -194,27 +163,29 @@ constraining a query (at least, not yet).
 
 =head1 Usage
 
- html2ntvml -f file1 file2 file3 > xml
+ pdf2ntvml -f file1 file2 file3 > xml
 
- html2ntvml <files.list > xml
+ pdf2ntvml <files.list > xml
 
 =head2 Example
 
-Convert all .html files in the "doc_root" directory to XML and store that XML
+Convert all .pdf files in the "doc_root" directory to XML and store that XML
 in the file "xml".
 
- html2ntvml -f doc_root/*.html >xml
+ pdf2ntvml -f doc_root/*.pdf >xml
 
 =head2 Example
 
 Index all of the files located by find command.
 
- find / --iregex '*.htm*' | html2ntvml | docseq | ntvindex -
+ find / --iregex '*.pdf' | pdf2ntvml | docseq | ntvindex -
 
 =head1 Requirements
 
 Requires the availability of the NexTrieve.pm module and associated modules
-as found on CPAN (http://www.cpan.org/).
+as found on CPAN (http://www.cpan.org/).  Also requires the availability of
+the "pdfinfo" and "pdftotext" programs of the xpdf package, located at
+http://www.foolabs.com/xpdf/ .
 
 =head1 Parameter settings
 
@@ -227,7 +198,7 @@ piped through STDIN.
 
 =head2 -E defaultinputencoding
 
-When processing HTML, many older HTML-files do not contain the information
+When processing PDF, many older PDF-files do not contain the information
 needed for XML to determine which character encoding is being used.  By
 specifying the -E parameter, you can specify which encoding should be assumed
 if no encoding information is found.  The default is "iso-8859-1".
@@ -246,7 +217,7 @@ that.
 
 =head2 -t 256: maximum length for title attribute
 
-Some HTML out there in the world contains B<very> long titles.  This is done
+Some PDF out there in the world contains B<very> long titles.  This is done
 by some people to get higher rankings, as many search engines value text in a
 title more than text in a body (or only search in the title at all).
 
@@ -260,27 +231,6 @@ as an attribute (and therefore returned in the hitlist).  It does B<not> alter
 the length of the title stored as a texttype.
 
 The default for -t is B<0>, indicating not limiting of text.
-
-=head2 -i: perform check for binary files, ignore if binary
-
-Sometimes a binary file (such as .gif image) can become part of the list of
-files to be processed, causing garbage to be indexed.  If the -i flag is
-specified, an additional check is performed to guess whether the file is a
-binary file.  If it is, then it will be silently ignored.
-
-=head2 -a: remove ASP-style tags from HTML
-
-If the HTML-files processed are in fact ASP-pages, it may be wise to remove
-the ASP-style tags from the HTML before being processed.  Specifying the "-a"
-flag will do just that: removing anything between "<%...%>" inclusive.
-
-=head2 -p: remove PHP-style tags from HTML
-
-If the HTML-files processed are in fact PHP-pages, it may be wise to remove
-the PHP-style tags from the HTML being processed.  Specifying the "-p" will
-do just that: removing anything between "<?...?>" and "<%..%>" inclusive.
-Please note that the <script language="php">...</script> tags are always
-removed, regardless of the -p setting.
 
 =head1 AUTHOR
 

@@ -1,3 +1,28 @@
+0.33	4 April 2002
+	Fixed some annoying errors when manifying <B>T</B>ext sequence by
+	changing that to <B>1</B>234 in HTML.pm, RFC822.pm and Message.pm.
+
+	Added mime-handler "_pdf" to MIME.pm for handling "application/pdf"
+	MIME-types of RFC822.pm, Message.pm and Mbox.pm indirectly.  This means
+	that emails with PDF-files attach will now also index the PDF-files.
+
+	First releasable version of PDF.pm completed including (limited)
+	test-suite (t/18pdf.t).  Also added "pdf2ntvml" script plus test-suite
+        (t/75pdf.t).
+
+	Changed "add_news" and "_resync_news" methods in Targz.pm to allow
+	for automatic recovery from a Net::NNTP object that has gone stale.
+
+	2 April 2002
+	Added "_fetch_file" method to NexTrieve.pm for fetching data as an
+	external file.  Added "DESTROY" method to NexTrieve.pm for
+	automatically removing temporary files added by _fetch_file and
+	possibly others in the future.
+
+	Commenced work on PDF.pm, based on "pdfinfo" and "pdftotext" programs
+	of the xpdf package, located at http://www.foolabs.com/xpdf/ .  Added
+	all the hooks and documentation in associated packages.
+
 0.32	1 April 2002
 	Fixed problem in method "ResourceFromIndex" in Index.pm.  Some versions
 	of NexTrieve give error message that would trigger the "ok" check.

@@ -6,7 +6,7 @@ package NexTrieve::Hitlist::Hit;
 
 use strict;
 @NexTrieve::Hitlist::Hit::ISA = qw(NexTrieve); # nothing from NexTrieve::Hitlist
-$NexTrieve::Hitlist::Hit::VERSION = '0.32';
+$NexTrieve::Hitlist::Hit::VERSION = '0.33';
 
 # Return true value for use
 
