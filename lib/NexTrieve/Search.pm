@@ -6,7 +6,7 @@ package NexTrieve::Search;
 
 use strict;
 @NexTrieve::Search::ISA = qw(NexTrieve);
-$NexTrieve::Search::VERSION = '0.29';
+$NexTrieve::Search::VERSION = '0.30';
 
 # Use other NexTrieve modules that we need always
 

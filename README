@@ -36,12 +36,13 @@ The following modules are part of the distribution:
  NexTrieve::Message             convert Mail::Message object(s) to document(s)
  NexTrieve::MIME                MIME-type conversions for documents
  NexTrieve::Overview            an overview of NexTrieve and its Perl support
+ NexTrieve::Query               create/adapt query
+ NexTrieve::Querylog            turn query log into Query objects
  NexTrieve::Replay              turn Querylog into Hitlist for a Search
  NexTrieve::Resource            create/adapt resource-file
  NexTrieve::RFC822              convert message(s) to logical document(s)
  NexTrieve::Search              logical search engine object
- NexTrieve::Query               create/adapt query
- NexTrieve::Querylog            turn query log into Query objects
+ NexTrieve::Targz               maintain a Targz message archive
  NexTrieve::UTF8                change encoding to UTF-8
 
 The build is standard:

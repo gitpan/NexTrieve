@@ -6,7 +6,7 @@ package NexTrieve::Mbox;
 
 use strict;
 @NexTrieve::Mbox::ISA = qw(NexTrieve);
-$NexTrieve::Mbox::VERSION = '0.29';
+$NexTrieve::Mbox::VERSION = '0.30';
 
 # Use other NexTrieve modules that we need always
 

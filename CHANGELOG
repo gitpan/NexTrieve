@@ -1,3 +1,40 @@
+0.30	18 March 2002
+	First version of Targz.pm completed including documentation.  You
+	can now quickly store both messages as well as unix mailboxes in the
+	NexTrieve::Targz archive format.
+
+	Added return value for success to method "splat" in NexTrieve.pm.
+
+	Added "filename:id" feature to _fetch_content_from_filename in
+	NexTrieve.pm, allowing filenames to be specified with an ":id"
+	suffix, which would then fill the "id" key in the content hash.
+	So you can now specify an absolute (temporary) filename with an
+	ID specification in one go.  This applies to RFC822.pm and HTML.pm
+	Feature created to fix the re-XMLing process of Targz.pm.
+
+	17 March 2002
+	First version of Targz.pm almost ready.  Only a few cleanup issues to
+	be fixed.
+
+	Create specific method "write_file" to Document.pm so that the encoding
+	information is saved when a single document is written out.  All
+	other methods to get at the XML of a Document object still return
+	the XML _without_ the processor instruction for easy inclusion in
+	document sequences.
+
+	Added dependency on Cwd and File::Copy to Makefile.PL.  Needed for
+	Targz.pm.
+
+	Added additional key-value pairs specification to the Document method
+	of the RFC822.pm.  Needed for Targz.pm.
+
+	16 March 2002
+	Started work on Targz.pm based on the scripts developed the past year.
+
+	Bolted dependency for IO::File, IO::Socket and Date::Parse into
+	NexTrieve.pm.  They seem to have been around forever: no need for
+	cleverness there.
+
 0.29	11 March 2002
 	Some documentation fixes to Message.pm and NexTrieve.pm.  Renamed
 	Overview.pod back to Overview.pm, as that _will_ show up for reading

@@ -28,7 +28,3 @@ the Text::Iconv module for recoding.
 
 Create text processing routine for RFC822 that would create commented text and
 footer information.
-
-Add module for handling the mailbox format as created for news.search.nl and
-the mailing lists stuff, i.e. a tarfile for each day, gzipped --best.  Possibly
-use the same module for creation of mailboxes in this format also.

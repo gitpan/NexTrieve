@@ -6,7 +6,7 @@ package NexTrieve::RFC822;
 
 use strict;
 @NexTrieve::RFC822::ISA = qw(NexTrieve);
-$NexTrieve::RFC822::VERSION = '0.29';
+$NexTrieve::RFC822::VERSION = '0.30';
 
 # Use other NexTrieve modules that we need always
 
@@ -64,6 +64,8 @@ my $mimeprocessor = NexTrieve::MIME::processor();
 #------------------------------------------------------------------------
 
 #  IN: 1 filename or RFC822
+#      2 type of input
+#      3 reference to hash with attributes to be made available
 # OUT: 1 instantiated NexTrieve::Document object
 
 sub Document {
@@ -74,7 +76,7 @@ sub Document {
 
   my $self = shift;
   my $ntv = $self->NexTrieve;
-  my ($message,$id,$date,$source) = $self->_fetch_content( @_ );
+  my ($message,$id,$date,$source) = $self->_fetch_content( shift,shift );
 
 # Obtain an empty Document object
 # Remember the source if a filename was specified
@@ -99,24 +101,34 @@ sub Document {
    unless length($message);
   my $handle = bless \$message,'NexTrieve::handle';
 
+# Make sure we have a local copy of $_ otherwise strange things happen
 # Create a hash with all the headers to be checked
 # Create a single string for matching the headers to be handled
 
+  local $_;
   my %header = map {($_,1)} (keys %{$attrhash},keys %{$texthash});
   my $headermatch = join( '|',keys %header );
 
 # Initialize the content hash
+# If there are extra values for the content hash
+#  Loop for all of the keys in the hash
+#   Copy the key and value
+
+  my %content = $id ? (id => [$id]) : ();
+  if (my $extra = shift) {
+    foreach (keys %{$extra}) {
+      $content{$_} = [$extra->{$_}];
+    }
+  }
+
 # Obtain normalized header lines
 # Get all the characteristics from the main header
 # Set the document character encoding if there are no attachments
 
-  my %content = $id ? (id => [$id]) : ();
   my $header = $self->_normalize_header( $handle );
   my ($type,$boundary,$transferencoding,$characterencoding) =
    $self->_header_characteristics( $header );
   $document->encoding( $characterencoding ) if $characterencoding and !$boundary;
-#  $document->encoding( $characterencoding || $self->DefaultInputEncoding )
-#   unless $boundary;
 
 # For all of the header lines so far
 #  Add line keyed to header if to be handled further
@@ -592,7 +604,7 @@ NexTrieve::Mbox module.
 
 =head2 Document
 
- $document = $rfc822->Document( file | html | [list] , | '' | 'file' | 'url' | sub {} );
+ $document = $rfc822->Document( file | html | [list] , | '' | 'file' | 'url' | sub {}, {extra} );
 
 The Document method performs the actual conversion from an RFC822-formatted
 message to XML and returns a NexTrieve::Document object that may become part
@@ -650,6 +662,10 @@ should be processed.  In list context, it is expected to return:
  - the "id" to be assigned to this message (usually the first input parameter)
  - the epoch time when the message was last modified (when available)
  - an indication of the source of the message (for error messages, if any)
+
+The third input parameter is optional: it specifies a reference to a hash
+with extra key-value pairs to be added to the content hash.  Values specified
+in this way, will always be the first value for that key.
 
 =head2 Resource
 

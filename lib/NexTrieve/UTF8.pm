@@ -1,6 +1,6 @@
 #--------------------------------------------------------------------------
 
-# Generated from ./create_module on Tue Feb 26 15:44:15 2002
+# Generated from ./create_module on Mon Mar 18 10:20:36 2002
 
 package NexTrieve::UTF8;
 
@@ -10,7 +10,7 @@ package NexTrieve::UTF8;
 
 use strict;
 @NexTrieve::UTF8::ISA = qw(NexTrieve);
-$NexTrieve::UTF8::VERSION = '0.29';
+$NexTrieve::UTF8::VERSION = '0.30';
 
 # Return true value for use
 
@@ -44,7 +44,7 @@ sub _utf8 {
    0x80 | (($cp >> 6) & 0x3F),
    0x80 | ($cp & 0x3F)
   );
-} #utf8
+} #_utf8
 
 #--------------------------------------------------------------------------
 # Convert from ucs2-be to utf-8

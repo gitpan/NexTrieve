@@ -49,6 +49,6 @@ if ($index->optimize) {
 
 # cleanup everything
 sleep( 1 );
-#system( "rm -f $resourcexml $indexdir/*; rmdir $indexdir" );
-#my $querylog = $resource->querylog;
-#system( "rm -f $querylog/*; rmdir $querylog" );
+system( "rm -f $resourcexml $indexdir/*; rmdir $indexdir" );
+my $querylog = $resource->querylog;
+system( "rm -f $querylog/*; rmdir $querylog" );

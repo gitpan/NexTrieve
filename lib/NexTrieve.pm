@@ -6,22 +6,18 @@ package NexTrieve;
 
 use strict;
 @NexTrieve::ISA = qw();
-$NexTrieve::VERSION = '0.29';
+$NexTrieve::VERSION = '0.30';
 
-# Initialize reference to socket module if module already loaded
+# Use the external modules that we need always
 
-my $iosocket;
-$iosocket = 'IO::Socket::INET' if defined( $IO::Socket::VERSION );
+use Date::Parse ();
+use IO::File ();
+use IO::Socket ();
 
 # Initialize reference to MD5 signature maker if module already loaded
 
 my $makemd5;
 $makemd5 = \&Digest::MD5::md5_hex if defined( $Digest::MD5::VERSION );
-
-# Initialize the dateparse handler if module already loaded
-
-my $dateparse;
-$dateparse = \&Date::Parse::str2time if defined( $Date::Parse::VERSION );
 
 # Initialize the hash with contentfetchers
 
@@ -518,6 +514,13 @@ sub RFC822 { 'NexTrieve::RFC822'->_new( @_ ) } #RFC822
 # OUT: 1 instantiated NexTrieve::Search object
 
 sub Search { 'NexTrieve::Search'->_new( @_ ) } #Search
+
+#-------------------------------------------------------------------------
+
+#  IN: 1 ref to hash with methods and values
+# OUT: 1 instantiated NexTrieve::Message object
+
+sub Targz { 'NexTrieve::Targz'->_new( @_ ) } #Targz
 
 #-------------------------------------------------------------------------
 
@@ -1121,13 +1124,7 @@ sub openfile {
 
   my $self = shift;
   my $handle;
-
-# why doesn't this work?
-#  $handle = do { local *FH; *FH };
-#  return $handle if open( $handle, @_ );
-
-use IO::File (); # temporary solution
-return $handle if $handle = IO::File->new( @_ );
+  return $handle if $handle = IO::File->new( @_ );
 
 # Add error to object
 # And return empty handed
@@ -1311,6 +1308,7 @@ sub slurp {
 #  IN: 1 handle to be splatted
 #      2 data to be splatted
 #      3 flag: do not close handle
+# OUT: 1 whether successful
 
 sub splat {
 
@@ -1320,13 +1318,14 @@ sub splat {
 
   my $self = shift;
   my $handle = shift || '';
-  return unless $handle;
+  return '' unless $handle;
 
 # Write the data to the file
 # Close the handle unless inhibited
 
-  print $handle $_[0];
+  my $success = print $handle $_[0];
   close( $handle ) unless $_[1] || '';
+  return $success;
 } #splat
 
 #-------------------------------------------------------------------------
@@ -1852,7 +1851,7 @@ sub write_file {
     return $self->write_fh( $handle );
   }
   return $self->_add_error( "Could not write to file '$filename': $!" );
-} #read_file
+} #write_file
 
 #------------------------------------------------------------------------
 
@@ -2303,21 +2302,6 @@ sub _datestamp { _datetimestamp( '%04d%02d%02d',shift ) } #_datestamp
 
 sub _datetimestamp {
 
-# Return now if we attempted to do an parse and no support was found before
-
-  return if defined( $dateparse ) and !ref($dateparse);
-
-# If we didn't try to load support before
-#  Check if we can load the support
-#  Return now if failed, setting flag on the fly
-#  Set the reference to the routine needed
-
-  unless (defined( $dateparse )) {
-    eval( 'use Date::Parse ()' );
-    return $dateparse = '' if !defined( $Date::Parse::VERSION );
-    $dateparse = \&Date::Parse::str2time;
-  }
-
 # Obtain the format
 # Obtain the line to work with
 
@@ -2329,10 +2313,10 @@ sub _datetimestamp {
 #  Attempt to remove any timezone specification
 #  Try to convert to epoch time again
 
-  my $epoch = $line =~ m#^\d+$# ? $line : &{$dateparse}( $line ) || '';
+  my $epoch = $line =~ m#^\d+$# ? $line : Date::Parse::str2time( $line ) || '';
   unless ($epoch) {
     $line =~ s#\s*\w{3}\s*$##;
-    $epoch = &{$dateparse}( $line ) || '';
+    $epoch = Date::Parse::str2time( $line ) || '';
   }
 
 # Return now if we cannot distill an epoch time
@@ -2480,9 +2464,11 @@ sub _fetch_from_filename {
 
 # Obtain the object
 # Obtain the filename
+# Obtain the ID
 
   my $self = shift;
   my $filename = shift;
+  my $id = $filename =~ s#:(\w+)$## ? $1 : $filename;
 
 # If it is possible to open the file, obtaining handle on the fly
 #  Obtain the last modified info
@@ -2500,14 +2486,14 @@ sub _fetch_from_filename {
     my $class = ref($self);
     $self->{$class.'::filename'} = $filename;
     $self->{$class.'::FILEOK'} = exists( $self->{$class.'::version'} );
-    return wantarray ? ($content,$filename,$lastmodified,$filename) : $content;
+    return wantarray ? ($content,$id,$lastmodified,$filename) : $content;
   }
 
 # Add error
 # Return with what can be returned
   
   $self->_add_error( "Could not open file '$filename': $!" );
-  return wantarray ? ('',$filename,'',$filename) : '';
+  return wantarray ? ('',$id,'',$filename) : '';
 } #_fetch_from_filename
 
 #------------------------------------------------------------------------
@@ -2913,21 +2899,6 @@ sub _processor_definition {
 
 sub _socket {
 
-# If we attempted to load support before
-#  Return now if we still don't have support
-# Else (first attempt)
-#  Check if we can load the support
-#  Return now if failed, setting flag on the fly
-#  Set the reference to the routine needed
-
-  if (defined($iosocket)) {
-    return unless $iosocket;
-  } else {
-    eval( 'use IO::Socket ()' );
-    $iosocket = '',return if !defined( $IO::Socket::VERSION );
-    $iosocket = 'IO::Socket::INET';
-  }
-
 # Obtain the object
 # Obtain the server:port specification
 # Set the default host if only a port number specified
@@ -2940,7 +2911,7 @@ sub _socket {
 # Set error if failed
 # Return whatever we got
 
-  my $socket = $iosocket->new( $serverport,@_ );
+  my $socket = IO::Socket::INET->new( $serverport,@_ );
   $self->_add_error( "Error connecting to socket: $@" )
    unless $socket;
   return $socket;
@@ -3928,6 +3899,7 @@ sub import {
    Resource
    RFC822
    Search
+   Targz
    UTF8
   );
   my $all = join( '|',@all );
@@ -4082,12 +4054,13 @@ The following modules are part of the distribution:
  NexTrieve::Message		convert Mail::Message object(s) to document(s)
  NexTrieve::MIME		MIME-type conversions for documents
  NexTrieve::Overview            an overview of NexTrieve and its Perl support
+ NexTrieve::Query		create/adapt query
+ NexTrieve::Querylog		turn query log into Query objects
  NexTrieve::Replay		turn Querylog into Hitlist for a Search
  NexTrieve::Resource		create/adapt resource-file
  NexTrieve::RFC822		convert message(s) to logical document(s)
  NexTrieve::Search		logical search engine object
- NexTrieve::Query		create/adapt query
- NexTrieve::Querylog		turn query log into Query objects
+ NexTrieve::Targz		maintain a Targz message archive
  NexTrieve::UTF8		change encoding to UTF-8
 
 The following scripts are part of the distribution:
@@ -4499,6 +4472,19 @@ list of method-value pairs as handled by the L<Set> method.
 
 Please note that search results are returned as a L<Hitlist> object.
 
+=head2 Targz
+
+ $targz = $ntv->Targz( {method => value} );
+
+Create a "NexTrieve::Targz" object for archiving and performing conversions
+on messages as defined by L<RFC822>, either stored as seperate files or in
+Unix mailboxes, to NexTrieve::L<Document> objects as part of a document
+sequence as described in
+"http://www.nextrieve.com/usermanual/2.0.0/ntvindexerxml.stm".
+
+The (optional) input parameter can be a reference to a hash or list of
+method-value pairs as handled by the L<Set> method.
+
 =head1 CONVENIENCE METHODS
 
 The following methods are inheritable from the NexTrieve module.  They are
@@ -4591,7 +4577,7 @@ problems.
 
 =head2 splat
 
- $self->splat( $handle, $contents, | true | false );
+ $self->splat( $handle, $contents, | true | false ) || die "did not splat\n";
 
 The "splat" method writes the data, specified by the second input parameter,
 to the handle, specified by the first input parameter, and closes the handle.
@@ -4601,6 +4587,8 @@ input parameter.  See the L<slurp> method for reading in a complete file.
 Silently does not perform any operation if no valid handle is specified: thus
 the first input parameter can be a call to the L<openfile> method without any
 problems.
+
+Returns true upon success.
 
 =head1 XML METHODS
 

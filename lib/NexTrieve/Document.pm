@@ -6,7 +6,7 @@ package NexTrieve::Document;
 
 use strict;
 @NexTrieve::Document::ISA = qw(NexTrieve);
-$NexTrieve::Document::VERSION = '0.29';
+$NexTrieve::Document::VERSION = '0.30';
 
 # Return true value for use
 
@@ -104,6 +104,38 @@ sub texts {
   $self->_kill_xml;
   @{$self->{ref($self).'::texts'}} = @_;
 } #texts
+
+#------------------------------------------------------------------------
+
+#  IN: 1 filename of file to write to (default: started with)
+# OUT: 1 calling object
+
+sub write_file {
+
+# Obtain the object
+# Obtain the class
+# Obtain the filename to work with
+
+  my $self = shift;
+  my $class = ref($self);
+  my $filename = shift || $self->{$class.'::filename'};
+  return $self->_add_error( "No filename specified" ) unless $filename;
+
+# If opening of the file was succcessful
+#  Save the filename in the object
+#  Obtain the encoding
+#  Add the processor instruction
+#  Return whatever is the result of reading the handle
+# Add error and return object
+
+  if (my $handle = $self->openfile( $filename,'>' )) {
+    $self->{$class.'::filename'} = $filename;
+    my $encoding = $self->encoding || $self->DefaultInputEncoding;
+    print $handle qq(<?xml version="1.0" encoding="$encoding"?>\n);
+    return $self->write_fh( $handle );
+  }
+  return $self->_add_error( "Could not write to file '$filename': $!" );
+} #write_file
 
 #------------------------------------------------------------------------
 

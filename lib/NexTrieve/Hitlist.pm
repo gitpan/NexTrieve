@@ -6,7 +6,7 @@ package NexTrieve::Hitlist;
 
 use strict;
 @NexTrieve::Hitlist::ISA = qw(NexTrieve);
-$NexTrieve::Hitlist::VERSION = '0.29';
+$NexTrieve::Hitlist::VERSION = '0.30';
 
 # Use all the submodules that we always need
 

@@ -25,6 +25,7 @@ lib/NexTrieve/RFC822.pm
 lib/NexTrieve/Query.pm
 lib/NexTrieve/Querylog.pm
 lib/NexTrieve/Search.pm
+lib/NexTrieve/Targz.pm
 lib/NexTrieve/UTF8.pm
 script/dbi2ntvml
 script/docseq
@@ -46,6 +47,7 @@ t/13rfc822.t
 t/14mbox.t
 t/15dbi.t
 t/16message.t
+t/17targz.t
 t/70html.t
 t/71mbox.t
 t/72mbox.t

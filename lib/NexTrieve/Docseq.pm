@@ -6,7 +6,7 @@ package NexTrieve::Docseq;
 
 use strict;
 @NexTrieve::Docseq::ISA = qw(NexTrieve);
-$NexTrieve::Docseq::VERSION = '0.29';
+$NexTrieve::Docseq::VERSION = '0.30';
 
 # Use all the Perl modules needed here
 
