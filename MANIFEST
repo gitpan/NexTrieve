@@ -128,3 +128,4 @@ t/ucs4le.html.stderr
 t/win1252.html
 t/win1252.html.stdout
 t/win1252.html.stderr
+META.yml                                Module meta-data (added by MakeMaker)

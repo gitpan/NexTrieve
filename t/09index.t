@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw($loaded $filename);
+
 BEGIN { plan tests => 5 }
 END {
   ok(0) unless $loaded;

@@ -3,7 +3,7 @@ package NexTrieve::Overview;
 # Set version information
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.39';
+$VERSION = '0.40';
 use strict;
 
 # Show warning that you shouldn't -use- this module
@@ -661,14 +661,18 @@ Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
 Please report bugs to <perlbugs@dijkmat.nl>.
 
+=head1 SUPPORT
+
+NexTrieve is no longer being supported.
+
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+Copyright (c) 1995-2003 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-http://www.nextrieve.com, the NexTrieve.pm and the other NexTrieve::xxx modules.
+The NexTrieve.pm and the other NexTrieve::xxx modules.
 
 =cut

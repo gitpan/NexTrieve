@@ -1,7 +1,12 @@
 # This test leaves the directories "indexdir" and "querylog" behind for
 # further tests, specifically for searching and daemonising.
 
+use strict;
+use warnings;
 use Test;
+
+use vars qw($tests $loaded);
+
 BEGIN { $tests = 14; plan tests => $tests }
 END { ok(0) unless $loaded }
 
@@ -20,7 +25,7 @@ my $version = $ntv->version;
 my $basedir = $0 =~ m#^(.*?/)[^/]+$# ? $1 : '';
 
 # 02 Create querylog directory
-$querylog = "${basedir}querylog";
+my $querylog = "${basedir}querylog";
 mkdir( $querylog,0777 );
 ok(-d $querylog);
 system( "rm -f $querylog/*" );

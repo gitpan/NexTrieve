@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw($tests);
+
 BEGIN { $tests = 9; plan tests => $tests }
 
 use NexTrieve qw(Message Resource);

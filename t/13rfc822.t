@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw($loaded @filename);
+
 BEGIN { plan tests => 16 }
 END {
   ok(0) unless $loaded;
@@ -38,7 +43,7 @@ my $rfc822 = $ntv->RFC822( {
 ok($rfc822);
 
 # 03 Create a very simple document from an RFC822 stream
-$document = $rfc822->Document( <<EOD );
+my $document = $rfc822->Document( <<EOD );
 From: me
 Subject: This is a title
 To: you

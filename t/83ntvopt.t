@@ -1,7 +1,12 @@
 # This test depends on the directories "indexdir" and "querylog" left behind
 # by previous tests and cleans them up when done.
 
+use strict;
+use warnings;
 use Test;
+
+use vars qw($tests $loaded);
+
 BEGIN { $tests = 4; plan tests => $tests }
 END {
  ok(0) unless $loaded;
@@ -30,7 +35,7 @@ my $ntv = NexTrieve->new;
 my $version = $ntv->version;
 
 # 02 Check indexdir directory
-$indexdir = "${basedir}indexdir";
+my $indexdir = "${basedir}indexdir";
 ok(-d $indexdir);
 
 # 03 Check resource file
@@ -39,7 +44,7 @@ ok(-e $resourcexml);
 my $resource = $ntv->Resource( $resourcexml );
 
 # 04 Check the integrity of the optimized index
-$index = $ntv->Index( $resource );
+my $index = $ntv->Index( $resource );
 if ($index->optimize) {
   my ($error) = $index->Errors;
   print "ok $_ # skip $error" foreach 4..$tests;

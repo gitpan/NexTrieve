@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw(@file $tests);
+
 BEGIN { @file = <t/*.pdf>; $tests = 3*@file; plan tests => $tests }
 
 eval( 'use Date::Parse ()' );

@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw(@file $tests);
+
 BEGIN { @file = <t/*.html>; $tests = 3*@file; plan tests => $tests }
 
 eval( 'use Date::Parse ()' );
@@ -6,7 +11,6 @@ unless (defined( $Date::Parse::VERSION )) {
   print "ok $_ # skip Module Date::Parse not installed\n" foreach 1..$tests;
   exit;
 }
-
 
 undef( $/ );
 #@file = ('t/ls.html');

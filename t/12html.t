@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw($loaded @filename);
+
 BEGIN { plan tests => 20 }
 END {
   ok(0) unless $loaded;
@@ -21,7 +26,7 @@ my $html = $ntv->HTML->htmlsimple;
 ok($html);
 
 # 03 Create a simple document from an HTML stream
-$document = $html->Document( <<EOD );
+my $document = $html->Document( <<EOD );
 <html>
 <head>
 <title>This is the title</title>

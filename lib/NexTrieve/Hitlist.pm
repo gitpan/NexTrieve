@@ -5,7 +5,7 @@ package NexTrieve::Hitlist;
 # Make sure we do everything by the book from now on
 
 @ISA = qw(NexTrieve);
-$VERSION = '0.39';
+$VERSION = '0.40';
 use strict;
 
 # Use all the submodules that we always need
@@ -477,6 +477,10 @@ Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
 Please report bugs to <perlbugs@dijkmat.nl>.
 
+=head1 SUPPORT
+
+NexTrieve is no longer being supported.
+
 =head1 COPYRIGHT
 
 Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
@@ -485,6 +489,6 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-http://www.nextrieve.com, the NexTrieve.pm and the other NexTrieve::xxx modules.
+The NexTrieve.pm and the other NexTrieve::xxx modules.
 
 =cut

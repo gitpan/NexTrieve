@@ -1,0 +1,15 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         NexTrieve
+version:      0.40
+version_from: lib/NexTrieve.pm
+installdirs:  site
+requires:
+    Cwd:                           0
+    Date::Parse:                   0
+    File::Copy:                    0
+    IO::File:                      0
+    IO::Socket:                    0
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.15

@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw($tests $loaded);
+
 BEGIN { $tests = 6; plan tests => $tests }
 END {
   ok(0) unless $loaded;
@@ -23,7 +28,7 @@ ok($pdf);
 
 # 03 Check if the HTML can be read and produces correct XML
 my $filename = "${basedir}test.pdf";
-$document = $pdf->Document( $filename );
+my $document = $pdf->Document( $filename );
 $document->xml unless ok($document->xml =~
 m|^<document>
 <attributes>

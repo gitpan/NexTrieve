@@ -3,7 +3,7 @@ package NexTrieve;
 # Set version information
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.39';
+$VERSION = '0.40';
 use strict;
 
 # Use the external modules that we need always
@@ -4126,6 +4126,11 @@ NexTrieve - Perl interface to NexTrieve search engine software
 
 =head1 DESCRIPTION
 
+ *****************************************************************************
+ *   Please note that NexTrieve is no longer being supported.  This is most  *
+ *   likely the last update to NexTrieve.pm to allow usage with Perl 5.8.1.  *
+ *****************************************************************************
+
 Provide a Perl interface to the complete functionality of the NexTrieve search
 engine sofware as found on http://www.nextrieve.com .
 
@@ -4950,14 +4955,18 @@ Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
 Please report bugs to <perlbugs@dijkmat.nl>.
 
+=head1 SUPPORT
+
+NexTrieve is no longer being supported.
+
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+Copyright (c) 1995-2003 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-http://www.nextrieve.com and the other NexTrieve::xxx modules.
+The other NexTrieve::xxx modules.
 
 =cut

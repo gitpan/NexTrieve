@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw($loaded $temp $targzdir @file $mbox);
+
 BEGIN { plan tests => 46 }
 END {
   ok(0) unless $loaded;
@@ -648,7 +653,8 @@ my $size = -s _;
 skip($skip,$targz->count_storable == 7);
 
 # 43 Check if tarfile didn't change this time
-skip($skip,$size == -s $countfile);
+skip($] < 5.008001 ? '' : "Cannot test reliably under Perl $]",
+ $size == -s $countfile);
 
 # 44 Check if we can create a resource file
 my $resource = $targz->Resource;

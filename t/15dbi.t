@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw($loaded $dbh $table $tests);
+
 BEGIN { $tests = 7; plan tests => $tests }
 END {
   ok(0) unless $loaded;

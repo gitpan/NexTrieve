@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw($loaded @filename);
+
 BEGIN { plan tests => 18 }
 END {
   ok(0) unless $loaded;
@@ -37,7 +42,7 @@ $docseq = $ntv->Docseq( $xml );
 $docseq->xml unless ok( $docseq->xml,$xml );
 
 # 07 Check if we can create a file
-$filename = "$0.xml";
+my $filename = "$0.xml";
 unlink( $filename ) if -e $filename;
 $docseq->write_file( $filename );
 ok(-e $filename);
@@ -159,7 +164,7 @@ EOD
 
 # 17 See if we can use the docseq script
 my $basedir = $0 =~ m#^(.*?/)[^/]+$# ? $1 : '';
-$handle = $ntv->openfile( "$^X script/docseq -f @list |");
+my $handle = $ntv->openfile( "$^X script/docseq -f @list |");
 ok($handle);
 
 # 18 See if it creates the right docseq data

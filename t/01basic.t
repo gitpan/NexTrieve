@@ -1,6 +1,25 @@
+use strict;
+use warnings;
 use Test;
+
+BEGIN {
+    warn <<EOD if -t STDERR and $] >= 5.008001;
+
+
+You may seem some messages about deprecated pseudo-hashes.  The NexTrieve
+modules do _not_ use pseudo-hashes.  The messages seem to be triggered by
+a special combination of the modules and test-suite.  They do not seem to
+occur during normal operation.  Please report any deviations from this
+description.
+
+EOD
+} #BEGIN
+
+use vars qw($loaded);
+
 BEGIN { plan tests => 13 }
 END { ok(0) unless $loaded }
+
 use NexTrieve qw(:all);
 $loaded = 1;
 ok(1);

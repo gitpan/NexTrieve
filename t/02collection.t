@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw($loaded $name $filename $directory);
+
 BEGIN { plan tests => 7 }
 END {
  ok(0) unless $loaded;

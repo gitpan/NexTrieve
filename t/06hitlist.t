@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw($loaded $filename $docid $score @attr1 @attr2 $attr2);
+
 BEGIN { plan tests => 26 }
 END {
   ok(0) unless $loaded;

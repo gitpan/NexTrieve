@@ -1,4 +1,9 @@
+use strict;
+use warnings;
 use Test;
+
+use vars qw($loaded $xml);
+
 BEGIN { plan tests => 8 }
 END { ok(0) unless $loaded }
 

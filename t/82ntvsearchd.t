@@ -1,7 +1,12 @@
 # This test depends on the directories "indexdir" and "querylog" left behind
 # by previous tests.
 
+use strict;
+use warnings;
 use Test;
+
+use vars qw($tests $loaded $daemon $number $flag);
+
 BEGIN { $tests = 25; plan tests => $tests }
 END {
  ok(0) unless $loaded;
@@ -26,7 +31,7 @@ my $ntv = NexTrieve->new( {RaiseError => 1} );
 my $version = $ntv->version;
 
 # 02 Check indexdir directory
-$indexdir = "${basedir}indexdir";
+my $indexdir = "${basedir}indexdir";
 ok(-d $indexdir);
 
 # 03 Check resource file
@@ -68,7 +73,7 @@ foreach ($firsthit..$lasthit) {
   $errors++ if $number != $_ or $flag != ($_ & 1);
 }
 skip($skip,$errors == 0);
-$md5 = $hitlist->md5;
+my $md5 = $hitlist->md5;
 
 # 08 save the hitlist in an external file and process that
 my $hitlistxml = "${basedir}hitlist.xml";
