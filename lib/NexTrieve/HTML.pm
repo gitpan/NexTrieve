@@ -6,7 +6,7 @@ package NexTrieve::HTML;
 
 use strict;
 @NexTrieve::HTML::ISA = qw(NexTrieve);
-$NexTrieve::HTML::VERSION = '0.35';
+$NexTrieve::HTML::VERSION = '0.36';
 
 # Use other NexTrieve modules that we need always
 

@@ -6,7 +6,7 @@ package NexTrieve::DBI;
 
 use strict;
 @NexTrieve::DBI::ISA = qw(NexTrieve);
-$NexTrieve::DBI::VERSION = '0.35';
+$NexTrieve::DBI::VERSION = '0.36';
 
 # Use the modules that are needed always
 

@@ -6,7 +6,7 @@ package NexTrieve::Collection;
 
 use strict;
 @NexTrieve::Collection::ISA = qw(NexTrieve);
-$NexTrieve::Collection::VERSION = '0.35';
+$NexTrieve::Collection::VERSION = '0.36';
 
 # Use all the other NexTrieve modules that we need always
 

@@ -6,7 +6,7 @@ package NexTrieve::Daemon;
 
 use strict;
 @NexTrieve::Daemon::ISA = qw(NexTrieve);
-$NexTrieve::Daemon::VERSION = '0.35';
+$NexTrieve::Daemon::VERSION = '0.36';
 
 # Use all the other NexTrieve modules that we need always
 

@@ -64,7 +64,8 @@ t/81ntvsearch.t
 t/82ntvsearchd.t
 t/83ntvopt.t
 t/asia.mbox
-t/asia.mbox.stdout
+t/asia.mbox.1.stdout
+t/asia.mbox.2.stdout
 t/asia.mbox.1.stderr
 t/asia.mbox.2.stderr
 t/badform.html

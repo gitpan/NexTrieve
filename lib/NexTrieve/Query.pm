@@ -6,7 +6,7 @@ package NexTrieve::Query;
 
 use strict;
 @NexTrieve::Query::ISA = qw(NexTrieve);
-$NexTrieve::Query::VERSION = '0.35';
+$NexTrieve::Query::VERSION = '0.36';
 
 # Initialize the list of texttype keys
 

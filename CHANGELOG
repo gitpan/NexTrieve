@@ -1,3 +1,22 @@
+0.36	3 May 2002
+	Added support to NexTrieve.pm for new standard Perl Encode.pm module
+	for handling encoding issues.  For most common encodings, the UTF8
+	module will not be used anymore.  Should an encoding not be handled
+	by the standard Encode module, then the "old" methods for handling
+	encoding (UTF8.pm, Text::Iconv and external iconv program) will be
+	attempted.
+
+	30 April 2002
+	Added a Timeout of 10 seconds to _fetch_from_url so that we only will
+	wait maximum 10 seconds for a page to be fetched.
+
+	Changed parameters of internal method _socket to allow for a list of
+	parameters to be passed to IO::Socket::INET.  Adapted other methods
+	where appropriate.
+
+	Fixed nit in NexTrievePath of NexTrieve.pm which would cause a warning
+	if there is no NexTrieve installed at all.
+
 0.35	26 April 2002
 	Updated some omissions to the NexTrieve.pm documentation.
 

@@ -30,3 +30,6 @@ and footer information.
 
 Create text processing routine for PDF.pm that would take out headers and
 footers and/or mark them as special texttypes.
+
+Find out why _fetch_from_url hangs on my 3COM LANmodem setup if there is no
+connection.

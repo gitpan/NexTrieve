@@ -6,7 +6,7 @@ package NexTrieve;
 
 use strict;
 @NexTrieve::ISA = qw();
-$NexTrieve::VERSION = '0.35';
+$NexTrieve::VERSION = '0.36';
 
 # Use the external modules that we need always
 
@@ -737,7 +737,7 @@ sub NexTrievePath {
 
 # Return what we found, saving in object on the fly
 
-  return $self->{'NexTrievePath'} = $path;
+  return $self->{'NexTrievePath'} = $path || '';
 } #NexTrievePath
 
 #-------------------------------------------------------------------------
@@ -915,7 +915,7 @@ sub anyport {
   my $self = shift;
   my $port = '';
   if (my $socket =
-   $self->_socket( Listen => 5, LocalAddr => (shift || 'localhost') ) ) {
+   $self->_socket( [Listen => 5, LocalAddr => (shift || 'localhost')] ) ) {
     $port = $socket->sockport;
   }
 
@@ -1193,6 +1193,30 @@ sub recode {
   my $converter;
   if (exists $code2code{$from,$to}) {
     $converter = $code2code{$from,$to};
+  }
+
+# If there is still no converter
+#  Make sure we have checked whether the Encode module is there
+#  If the Encode module is there
+#   Create a converter closure
+#   Initialize string that can always be converted
+#   If it converted successfully
+#    Save this converter in the hash
+#   Else
+#    Reset the converter, we need to try the rest
+
+  if (!$converter) {
+    eval( 'use Encode; $Encode::VERSION ||= ""' )
+     unless defined( $Encode::VERSION );
+    if ($Encode::VERSION) {
+      $converter = sub {Encode::from_to( $_[0],$from,$to )};
+      my $space = '    ';
+      if (eval{&{$converter}($space)} || '') {
+        $code2code{$from,$to} = $converter;
+      } else {
+        $converter = undef;
+      }
+    }
   }
 
 # If there is still no converter
@@ -2596,7 +2620,8 @@ sub _fetch_from_url {
     $url ||= '/';
     no strict 'refs';
     my $agent = ref($self); $agent .= " (${$agent.'::VERSION'})";
-    if (my $content = $self->ask_server_port( "$host:$port",<<EOD )) {
+    if (my $content = $self->ask_server_port(
+     [PeerAddr => "$host:$port",Timeout => 10,],<<EOD)) {
 GET $url HTTP/1.0
 Host: $host
 User-Agent: $agent
@@ -2955,25 +2980,25 @@ sub _processor_definition {
 
 #-------------------------------------------------------------------------
 
-#  IN: 1 server:port or port specification
-#      2..N any other parameters to IO::Socket::INET
+#  IN: 1 server:port or port specification or reference to list with hash
 # OUT: 1 socket (undef if error)
 
 sub _socket {
 
 # Obtain the object
-# Obtain the server:port specification
+# Obtain the hash of the parameters
 # Set the default host if only a port number specified
 
   my $self = shift;
-  my $serverport = shift;
-  $serverport = "localhost:$serverport" if $serverport =~ m#^\d+$#;
+  my %hash = ref($_[0]) eq 'ARRAY' ? @{shift()} : (PeerAddr => shift);
+  $hash{'PeerAddr'} = "localhost:$hash{'PeerAddr'}"
+   if exists( $hash{'PeerAddr'} ) and $hash{'PeerAddr'} =~ m#^\d+$#;
 
 # Attempt to open a socket there
 # Set error if failed
 # Return whatever we got
 
-  my $socket = IO::Socket::INET->new( $serverport,@_ );
+  my $socket = IO::Socket::INET->new( %hash );
   $self->_add_error( "Error connecting to socket: $@" )
    unless $socket;
   return $socket;

@@ -6,7 +6,7 @@ package NexTrieve::Targz;
 
 use strict;
 @NexTrieve::Targz::ISA = qw(NexTrieve);
-$NexTrieve::Targz::VERSION = '0.35';
+$NexTrieve::Targz::VERSION = '0.36';
 
 # Make sure we use the modules that we need here
 

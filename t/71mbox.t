@@ -24,7 +24,7 @@ foreach my $file (@file) {
         last if $ok = ($content =~ m#$_#s);
       }
       unless (ok($ok)) {
-        warn $content if $content;
+        warn "*** $file ***\n$content" if $content;
       }
       unlink( $type );
     }

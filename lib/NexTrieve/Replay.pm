@@ -6,7 +6,7 @@ package NexTrieve::Replay;
 
 use strict;
 @NexTrieve::Replay::ISA = qw(NexTrieve);
-$NexTrieve::Replay::VERSION = '0.35';
+$NexTrieve::Replay::VERSION = '0.36';
 
 # Use all of the NexTrieve submodules that we need for sure
 
