@@ -1,3 +1,26 @@
+0.32	1 April 2002
+	Fixed problem in method "ResourceFromIndex" in Index.pm.  Some versions
+	of NexTrieve give error message that would trigger the "ok" check.
+	This is now fixed.
+
+	Changed method "_create_tarfile" in Targz.pm to first create the
+	tarfile and then gzip it.  This approach allows incremental updates
+	of the tarfile, allowing unlimited number of files to be added to the
+	tarfile (it would bomb on huge numbers of messages in a single day
+	before).  Adapted documentation to indicate a "gzip" program with the
+	"--best" parameter is also needed.  This should probably lead to
+	better compression of the gzipped tarfiles.
+
+	31 March 2002
+	Some more tuning in "_resync_news" of Targz.pm.  Now correctly handles
+	the case with a lot of missing messages: if the date of a message is
+	two days or more before the last date of a message, then a collect is
+	started from the message after that message.
+
+	25 March 2002
+	Fixed a small problem in internal "_resync_news" method of Targz.pm
+	that would loop on missing messages in the target zone.
+
 0.31	25 March 2002
 	Refined the internal "_resync_news" method to quickly handle "holes"
 	in the message stream.  Now also uses a binary chop approach to find

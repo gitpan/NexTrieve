@@ -6,7 +6,7 @@ package NexTrieve::Message;
 
 use strict;
 @NexTrieve::Message::ISA = qw(NexTrieve);
-$NexTrieve::Message::VERSION = '0.31';
+$NexTrieve::Message::VERSION = '0.32';
 
 # Use other NexTrieve modules that we need always
 

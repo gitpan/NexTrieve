@@ -6,7 +6,7 @@ package NexTrieve::Resource;
 
 use strict;
 @NexTrieve::Resource::ISA = qw(NexTrieve);
-$NexTrieve::Resource::VERSION = '0.31';
+$NexTrieve::Resource::VERSION = '0.32';
 
 # Initialize the list of attribute keys
 # Initialize the list of texttype keys

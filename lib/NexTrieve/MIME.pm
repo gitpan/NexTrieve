@@ -6,7 +6,7 @@ package NexTrieve::MIME;
 
 use strict;
 @NexTrieve::MIME::ISA = qw(NexTrieve);
-$NexTrieve::MIME::VERSION = '0.31';
+$NexTrieve::MIME::VERSION = '0.32';
 
 # Use other NexTrieve modules that we need always
 

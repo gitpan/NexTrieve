@@ -6,7 +6,7 @@ package NexTrieve::Index;
 
 use strict;
 @NexTrieve::Index::ISA = qw(NexTrieve);
-$NexTrieve::Index::VERSION = '0.31';
+$NexTrieve::Index::VERSION = '0.32';
 
 # Use other NexTrieve modules that we need always
 
@@ -100,7 +100,7 @@ sub ResourceFromIndex {
   $command .= " --xml $indexdir";
   $self->{ref($self).'::command'} = $command;
   my $xml = $self->slurp( $self->openfile( "$command|" ) );
-  $xml = '' unless $xml =~ m#<indexcreation>#;
+  $xml = '' unless $xml =~ m#<indexcreation>.*?</indexcreation>#s;
 
 # Create a new Resource object
 # Read the complete XML if there is any

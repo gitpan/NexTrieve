@@ -6,7 +6,7 @@ package NexTrieve::RFC822;
 
 use strict;
 @NexTrieve::RFC822::ISA = qw(NexTrieve);
-$NexTrieve::RFC822::VERSION = '0.31';
+$NexTrieve::RFC822::VERSION = '0.32';
 
 # Use other NexTrieve modules that we need always
 

@@ -6,7 +6,7 @@ package NexTrieve::Targz;
 
 use strict;
 @NexTrieve::Targz::ISA = qw(NexTrieve);
-$NexTrieve::Targz::VERSION = '0.31';
+$NexTrieve::Targz::VERSION = '0.32';
 
 # Make sure we use the modules that we need here
 
@@ -769,7 +769,7 @@ sub update_xml {
 #  Create a tarfile of all the files now created
 #  And remember how many we did
 
-    _create_tarfile( $self,"$datestamp.$name.tar.gz",[map {"$_.xml"} @{$ids}] );
+    _create_tarfile( $self,"$datestamp.$name",[map {"$_.xml"} @{$ids}] );
     $done += @{$ids};
   }
 
@@ -882,7 +882,7 @@ sub DESTROY {
 #------------------------------------------------------------------------
 
 #  IN: 1 object
-#      2 name of tarfile to create/update
+#      2 name of tarfile to create/update (without .tar.gz extension)
 #      3 reference to list of files names
 # OUT: 1 whether successful
 
@@ -896,12 +896,35 @@ sub _create_tarfile {
   my $tarfile = shift;
   my $list = shift;
 
-# Create the command to be executed
-# If creation of tarfile failed
+# Set the number of files to be added to the
+# Set the ordinal number of the last file to add
+# Set the type of action on the tar file
+# For all the steps to take
+#  Set the maximum for this step
+#  Create the command to be executed
+#  If creation or adaption of tarfile failed
+#   Add error and return
+#  Change type to appending
+
+  my $step = 500;
+  my $last = $#$list;
+  my $type = '--create';
+  for (my $i = 0; $i <= $last; $i += $step) {
+    my $max = $i+$step <= $last ? $i + $step - 1 : $last;
+    my $command =
+     "tar $type --remove-files --file=$tarfile.tar.new @{$list}[$i..$max]";
+    if (my $exit = system( $command )) {
+      $self->_add_error( "Command '$command' returned status $exit" );
+      return '';
+    }
+    $type = '--append';
+  }
+
+# Create the command to zip the tarfile
+# Zip the tarfile, if failed
 #  Add error and return
 
-  my $command =
-   "tar --create --remove-files --gzip --file=$tarfile.new @{$list}";
+  my $command = "gzip --best $tarfile.tar.new";
   if (my $exit = system( $command )) {
     $self->_add_error( "Command '$command' returned status $exit" );
     return '';
@@ -910,8 +933,8 @@ sub _create_tarfile {
 # Return indicating success if rename to final file name successful
 # Add error and return
 
-  return 1 if rename( "$tarfile.new",$tarfile );
-  $self->_add_error( "Could not rename '$tarfile.new' to '$tarfile: $!" );
+  return 1 if rename( "$tarfile.tar.new.gz","$tarfile.tar.gz" );
+  $self->_add_error( "Could not rename '$tarfile.tar.new.gz' to '$tarfile.tar.gz: $!" );
   return '';
 } #_create_tarfile
 
@@ -1109,7 +1132,7 @@ sub _finish_add {
 
       return '' unless _create_tarfile(
        $self,
-       "$directory/xml/$datestamp.$name.tar.gz",
+       "$directory/xml/$datestamp.$name",
        [map {"$_.xml"} @{$ordinal->{$date}}]
       );
       _splat_datestamp( $self,$datestamp,'.xml',1 );
@@ -1121,7 +1144,7 @@ sub _finish_add {
 
     return '' unless _create_tarfile(
      $self,
-     "$directory/rfc/$datestamp.$name.tar.gz",
+     "$directory/rfc/$datestamp.$name",
      $ordinal->{$date}
     );
     _splat_datestamp( $self,$datestamp,'',1 );
@@ -1359,13 +1382,13 @@ sub _resync_news {
 
     my $low = $first;
     my $high = $last;
-    while ($check != $lastchecked and $check <= $last) {
+    while ($check != $lastchecked and $check <= $high) {
       $lastchecked = $check;
 
 #   If successful in obtaining a reference to the header of that message
 #    If successful in obtaining the time of the message
 #     Convert to datestamp
-#     Outloop if we're on the right date
+#     Outloop if we're on the right date or we're at the end of the area
 #     If too low now
 #      Move to half of upper half and set new low mark
 #     Elseif too high now
@@ -1376,7 +1399,7 @@ sub _resync_news {
       if (my $head = $head{$check} ||= $nntp->head( $check )) {
         if (my $time = $time{$check} ||= _epoch( $head )) {
           $datestamp = _datestamp( $time );
-          last if $datestamp == $lastdate;
+          last if $datestamp == $lastdate or $check == $high;
           if ($datestamp < $lastdate) {
             ($low,$check) = ($check,int(($high+$check)/2));
           } elsif ($datestamp > $lastdate) {
@@ -1413,10 +1436,7 @@ sub _resync_news {
 #   If successful in obtaining the time of this message
 #    If there is a message-id in this message
 #     Obtain the datestamp of the time
-#     Obtain the message-id:s that we have for this datestamp
-#     For all of the ID's of this datestamp
-#      Return starting from the next if we know about this message-id
-#  Move to the previous message
+#     Return now if two days before the last date that we have
 
   my %ids;
   while ($check >= $first) {
@@ -1424,6 +1444,13 @@ sub _resync_news {
       if (my $time = $time{$check} ||= _epoch( $head )) {
         if (my ($id) = grep( s#^message-id:\s*<?(.*?)>?\n$#$1#si,@{$head} )) {
           my $datestamp = _datestamp( $time );
+          return ($check+1,$last) if $datestamp < $lastdate-1;
+
+#     Obtain the message-id:s that we have for this datestamp
+#     For all of the ID's of this datestamp
+#      Return starting from the next if we know about this message-id
+#  Move to the previous message
+
           my @id = @{$ids{$datestamp} ||= _message_ids( $self,$datestamp )};
           foreach (@id) {
             return ($check+1,$last) if $_ eq $id;
@@ -1629,6 +1656,7 @@ HTML on a web-server.
 Currently a "tar" program that understands the following parameters B<must>
 be available for this module to operate correctly:
 
+ --append        append to existing tarfile
  --create        create new tarfile
  --directory=    extract files to indicated directory
  --extract       extract files from archive
@@ -1639,6 +1667,11 @@ be available for this module to operate correctly:
  --remove-files  remove original files upon storing in tarfile
  --to-stdout     extract files to STDOUT
  --verbose       perform action verbosely (list files being extracted)
+
+Currently a "gzip" program that understands the following parameters B<must>
+be available for this module to operate correctly:
+
+ --best          use best compression possible
 
 =head1 OBJECT METHODS
 
