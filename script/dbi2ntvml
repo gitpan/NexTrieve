@@ -15,7 +15,7 @@ use NexTrieve qw(DBI);
 
 # Output warning if it is the wrong version
 
-warn <<EOD if $NexTrieve::VERSION ne '0.36';
+warn <<EOD if $NexTrieve::VERSION ne '0.37';
 $0 is not using the right version of the associated Perl modules.
 Operation of this script may be in error because of this.
 EOD

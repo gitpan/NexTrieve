@@ -1,3 +1,13 @@
+0.37	2 June 2002
+	Checked test-suite against 5.8.0-RC1.  There do not seem to be any
+	problems, even with a threaded perl, although no specific thread-test
+	have been added or performed yet.
+
+	13 May 2002
+	Possibly fixed problem in testing of scripts: all scripts are now
+	tested with $^X as the executing perl, rather than the /usr/bin/perl
+	that is the default in the script.
+
 0.36	3 May 2002
 	Added support to NexTrieve.pm for new standard Perl Encode.pm module
 	for handling encoding issues.  For most common encodings, the UTF8

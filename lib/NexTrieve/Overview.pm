@@ -4,7 +4,7 @@ package NexTrieve::Overview;
 # Set version information
 
 use strict;
-$NexTrieve::Overview::VERSION = '0.36';
+$NexTrieve::Overview::VERSION = '0.37';
 
 # Show warning that you shouldn't -use- this module
 

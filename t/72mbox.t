@@ -3,7 +3,7 @@ BEGIN { plan tests => 15 }
 
 undef $/;
 
-my $script = 'script/mailbox2ntvml';
+my $script = "$^X script/mailbox2ntvml";
 my $basedir = $0 =~ m#^(.*?/)[^/]+$# ? $1 : '';
 my $mailbox = "${basedir}mailbox";
 my $message = "${basedir}message";

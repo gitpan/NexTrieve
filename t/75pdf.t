@@ -17,7 +17,7 @@ undef( $/ );
 #@file = ('t/badmime.pdf');
 foreach my $file (@file) {
   my $stderr = content( "$file.stderr" );
-  my $exit = system( "script/pdf2ntvml -i -f $file 2>stderr >stdout" );
+  my $exit = system( "$^X script/pdf2ntvml -i -f $file 2>stderr >stdout" );
   ok($exit == 0);
   if (-e 'stderr') {
     foreach my $type (qw(stdout stderr)) {

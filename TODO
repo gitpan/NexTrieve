@@ -33,3 +33,6 @@ footers and/or mark them as special texttypes.
 
 Find out why _fetch_from_url hangs on my 3COM LANmodem setup if there is no
 connection.
+
+Check _intext_recode and why it produces strange errors on the HTML of the
+Encode::MIME::Header module.

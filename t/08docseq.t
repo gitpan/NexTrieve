@@ -159,7 +159,7 @@ EOD
 
 # 17 See if we can use the docseq script
 my $basedir = $0 =~ m#^(.*?/)[^/]+$# ? $1 : '';
-$handle = $ntv->openfile( "${basedir}../script/docseq -f @list |");
+$handle = $ntv->openfile( "$^X script/docseq -f @list |");
 ok($handle);
 
 # 18 See if it creates the right docseq data

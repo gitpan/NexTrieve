@@ -12,7 +12,7 @@ undef( $/ );
 #@file = ('t/badmime.mbox');
 foreach my $file (@file) {
   my $stderr = content( "$file.stderr" );
-  my $exit = system( "script/mailbox2ntvml -i -f $file 2>stderr >stdout" );
+  my $exit = system( "$^X script/mailbox2ntvml -i -f $file 2>stderr >stdout" );
   ok($exit == 0);
   if (-e 'stderr') {
     foreach my $type (qw(stdout stderr)) {

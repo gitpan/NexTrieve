@@ -6,7 +6,7 @@ package NexTrieve::Querylog;
 
 use strict;
 @NexTrieve::Querylog::ISA = qw(NexTrieve);
-$NexTrieve::Querylog::VERSION = '0.36';
+$NexTrieve::Querylog::VERSION = '0.37';
 
 # Use all of the NexTrieve submodules that we need for sure
 

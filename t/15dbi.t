@@ -139,7 +139,7 @@ $docseq->xml unless ok($docseq->xml,$xml);
 
 # 05 See if the dbi2ntvml script works
 my $scriptxml = $ntv->slurp( $ntv->openfile(
- "script/dbi2ntvml -a id title -t title -c 'DBI:mysql:database=test;host=localhost' -u 'test' -p '' -s '$select'|" ) );
+ "$^X script/dbi2ntvml -a id title -t title -c 'DBI:mysql:database=test;host=localhost' -u 'test' -p '' -s '$select'|" ) );
 warn $scriptxml || 'No XML returned' unless ok($scriptxml,$xml);
 
 # 06 Check if we can create a resource object
