@@ -9,7 +9,7 @@ use NexTrieve qw(Search);
 $loaded = 1;
 ok( 1 );
 
-my $ntv = NexTrieve->new( {DieOnError => 1} );
+my $ntv = NexTrieve->new( {RaiseError => 1} );
 my $version = $ntv->version;
 
 # 02 Create empty search object
@@ -35,5 +35,5 @@ $search = $ntv->Search( $filename );
 ok(ref($search->Resource),ref($resource));
 
 # 07 Check if creation of search object with parameters works
-$search = $ntv->Search( {basedir => '/home/user/nextrieve'} );
+$search = $ntv->Search( {indexdir => '/home/user/nextrieve/index'} );
 ok(ref($search->Resource),ref($resource));

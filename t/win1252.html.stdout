@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<filename>t/win1252.html</filename>
+</attributes>
+<text>
+This is a text with windows-1252 encoded characters: 
+ 
+€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ
+</text>
+</document>
+</ntv:docseq>

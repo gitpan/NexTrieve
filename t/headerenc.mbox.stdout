@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<mailbox>t/headerenc.mbox</mailbox>
+<offset>0</offset>
+<length>105</length>
+<from>text in us-ascii an élève more in us-ascii</from>
+<subject>text is ísò-8859-1</subject>
+</attributes>
+<text>
+<subject>text is ísò-8859-1</subject>
+Text
+</text>
+</document>
+</ntv:docseq>

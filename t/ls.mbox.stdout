@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<mailbox>t/ls.mbox</mailbox>
+<offset>0</offset>
+<length>12704</length>
+<from>me</from>
+<subject>before message with &amp; in the title</subject>
+</attributes>
+<text>
+<subject>before message with &amp; in the title</subject>
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/ls.mbox</mailbox>
+<offset>12704</offset>
+<length>63</length>
+<from>me</from>
+<subject>after message</subject>
+</attributes>
+<text>
+<subject>after message</subject>
+After message
+</text>
+</document>
+</ntv:docseq>

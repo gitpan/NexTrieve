@@ -6,7 +6,7 @@ package NexTrieve::Querylog;
 
 use strict;
 @NexTrieve::Querylog::ISA = qw(NexTrieve);
-$NexTrieve::Querylog::VERSION = '0.03';
+$NexTrieve::Querylog::VERSION = '0.29';
 
 # Use all of the NexTrieve submodules that we need for sure
 
@@ -27,11 +27,13 @@ sub _new {
 # Obtain the class of the object
 # Attempt to create the base object
 # Set the filename
+# Set any other parameters
 # Return the object
 
   my $class = shift;
   my $self = $class->SUPER::_new( shift );
   $self->filename( shift ) if @_;
+  $self->Set( shift ) if @_;
   return $self;
 } #_new
 
@@ -119,7 +121,7 @@ sub filename {
 #  Get first query if we have a handle
 
   if (@_) {
-    $self->_handle( my $handle = $self->openfile( shift ) || '' );
+    $self->_handle( my $handle = $self->openfile( shift,'<' ) || '' );
     $self->_next if $handle;
   }
 
@@ -218,36 +220,78 @@ NexTrieve::Querylog - handle NexTrieve as a querylog
 The Querylog object of the Perl support for NexTrieve.  Do not create
 directly, but through the Querylog method of the NexTrieve object.
 
-=head1 METHODS
+When NexTrieve is run as a server process (see the NexTrieve::Daemon module),
+a log of queries is kept.  This module operates on such a log file and returns
+NexTrieve::Query objects from a such a log file.
 
-These methods are available to the NexTrieve::Querylog object.
+=head1 OBJECT METHODS
+
+These methods return one or more objects.
 
 =head2 Queries
 
  @query = $querylog->Queries;
 
+The "Queries" object returns a list of NexTrieve::Query objects of all queries
+that were logged in the log file that was indicated upon creation of the
+NexTrieve::Querylog object, or which has been specified by the L<filename>
+method.
+
+See the documentation of the NexTrieve::Query module for more information.
+
 =head2 Query
 
+ $query = $querylog->Query;
  ($query,$localtime) = $querylog->Query;
+
+The "Query" object returns the next NexTrieve::Query object of the queries
+that were logged in the log file that was indicated upon creation of the
+NexTrieve::Querylog object, or which has been specified by the L<filename>
+method.
+
+If there are no more queries to be found in the query log file, then an
+undefined value is returned.  It is also possible to call the L<eof> method
+to find out whether there are any more queries available before calling the
+"Query" method.
+
+If called in a list context, the time (as a localtime() string) when the
+query was originally done, is also returned as the second output parameter.
+
+See the documentation of the NexTrieve::Query module for more information.
+
+=head1 OTHER METHODS
+
+These methods allow you to check or change other aspects of the
+NexTrieve::Querylog object.
 
 =head2 eof
 
  $atendoffile = $querylog->eof;
+
+The "eof" method returns true if there are no more queries left in the
+NexTrieve::Querylog object to be returned by the L<Query> method.
+
+Please note that if the L<Queries> method was used, this method will B<always>
+return true.
 
 =head2 filename
 
  $querylog->filename( filename );
  $filename = $querylog->filename;
 
+The "filename" method can be used to change to another query log file or to
+specify the first query log file if none was specificied when the
+NexTrieve::Querylog object was created.
+
 =head1 AUTHOR
 
-Elizabeth Mattijsen, <liz@nextrieve.com>.
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
-Please report bugs to <perlbugs@nextrieve.com>.
+Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

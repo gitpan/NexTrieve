@@ -1,12 +1,12 @@
 use Test;
-BEGIN { plan tests => 6 }
+BEGIN { plan tests => 8 }
 END { ok(0) unless $loaded }
 
 use NexTrieve qw(Document);
 $loaded = 1;
 ok( 1 );
 
-my $ntv = NexTrieve->new( {DieOnError => 1} );
+my $ntv = NexTrieve->new( {RaiseError => 1} );
 my $version = $ntv->version;
 
 # 02 Create empty document file, check version
@@ -14,7 +14,7 @@ my $document = $ntv->Document;
 ok( $document->version,undef );
 
 # 03 Check whether empty document file comes out ok
-ok( $document->xml,qq(<document>\n</document>) );
+$document->xml unless ok( $document->xml,'' );
 
 # Initalize the XML to check against
 $xml = <<EOD;
@@ -40,7 +40,7 @@ $document->text( 'title','This is text in a title texttype' );
 $document->text(
  'This is a default text, which can be specified as a single string' );
 $document->text( 'footer','This is a footer text' );
-ok($document->xml."\n",$xml);
+$document->xml unless ok($document->xml."\n",$xml);
 
 # 05 Add all attributes and text to existing object
 $document = $ntv->Document;
@@ -53,7 +53,7 @@ $document->texts(
  ['This is a default text, which can be specified as a single string'],
  ['footer','This is a footer text'],
 );
-ok($document->xml."\n",$xml);
+$document->xml unless ok($document->xml."\n",$xml);
 
 # 06 Add attributes and text while creating object
 $document = $ntv->Document( {
@@ -69,4 +69,17 @@ $document = $ntv->Document( {
    ['footer','This is a footer text'],
   ],
 } );
-ok($document->xml."\n",$xml);
+$document->xml unless ok($document->xml."\n",$xml);
+
+# 07 Check if incorrect XML causes error with xmllint and comes out empty
+$document = $ntv->Document;
+$document->RaiseError( 0 );
+$document->xml( <<EOD );
+<open>This is incorrect XML</close>
+EOD
+$document->xmllint( 1 );
+my $skip = $document->xmllint ? '' : "xmllint not available";
+skip($skip,$document->xml,''); 
+
+# 08 Check if there are indeed errors
+skip($skip,$document->Errors);

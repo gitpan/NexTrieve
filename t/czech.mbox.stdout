@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<mailbox>t/czech.mbox</mailbox>
+<offset>0</offset>
+<length>398</length>
+<date>20020212</date>
+<from>YouŠ</from>
+<subject>RE: the original question</subject>
+</attributes>
+<text>
+<subject>RE: the original question</subject>
+Hi,
+  can someone from the mysql developers tell me what i did wrong, if this
+is a bug?
+</text>
+</document>
+</ntv:docseq>

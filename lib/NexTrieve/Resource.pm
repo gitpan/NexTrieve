@@ -6,7 +6,7 @@ package NexTrieve::Resource;
 
 use strict;
 @NexTrieve::Resource::ISA = qw(NexTrieve);
-$NexTrieve::Resource::VERSION = '0.03';
+$NexTrieve::Resource::VERSION = '0.29';
 
 # Initialize the list of attribute keys
 # Initialize the list of texttype keys
@@ -31,23 +31,6 @@ my %allkey = (
 #------------------------------------------------------------------------
 
 # Following subroutines are for setting and retrieving field values
-
-#------------------------------------------------------------------------
-
-#  IN: 1 new value (default: no change)
-# OUT: 1 current/old value
-
-sub basedir {
-
-# Set and/or return the value
-
-  return $_[0]->_field_variable_hash_kill_xml(
-   ref(shift),
-   'basedir',
-   ['name'],
-   @_
-  );
-} #basedir
 
 #------------------------------------------------------------------------
 
@@ -596,42 +579,71 @@ The Resource object of the Perl support for NexTrieve.  Do not create
 directly, but through the Resource method of the NexTrieve::Collection or
 the NexTrieve object.
 
- $resource = $collection->Resource( mnemonic ); 
- $resource = $ntv->Resource( | file | xml | {method => value} );
-
 =head1 BASE METHODS
 
 The following methods handle certain base aspects of the NexTrieve
 resource-file.
-
-=head2 basedir
-
- $resource->basedir( path ); 
- $basedir = $resource->basedir;
-
-=head2 indexdir
-
- $resource->indexdir( path ); 
- $indexdir = $resource->indexdir;
 
 =head2 cache
 
  $resource->cache( size ); 
  $cache = $resource->cache;
 
+The "cache" method specifies the amount of RAM that will be used by the
+NexTrieve programs as a data-cache.  If no postfix is specified, the amount
+specified is assumed to be in bytes.  The following postfixes are recognized:
+
+ "K"
+Assume cache size is specified in Kilobytes
+
+ "M"
+Assume cache size is specified in Megabytes
+
+ "G"
+Assume cache size is specified in Gigabytes
+
+By default, a value of "10M" is assumed, which is rather on the conservative
+side.  Performance of any of the NexTrieve programs will generally improve
+with a higher value specified, as long as the amount specified is less than
+the amount of physical RAM available.
+
+=head2 indexdir
+
+ $resource->indexdir( path ); 
+ $indexdir = $resource->indexdir;
+
+The "indexdir" method specifies the name of the directory in which the
+NexTrieve "ntvindex" program (as accessed by the NexTrieve::Index module) will
+store its data-files, and which is used by the NexTrieve "ntvsearch" program
+(as accessed by the NexTrieve::Search module) or the NexTrieve "ntvsearchd"
+program (as started by the NexTrieve::Daemon module) to perform their searches
+from.
+
 =head2 licensefile
 
  $resource->licensefile( file ); 
  $licensefile = $resource->licensefile;
+
+The "licensefile" method specifies the path of the file in which the NexTrieve
+license keys are stored.   By default "/usr/local/nextrieve/license" is assumed
+to be the location of the NexTrieve license file.
 
 =head2 logfile
 
  $resource->logfile( file ); 
  $logfile = $resource->logfile;
 
+The "logfile" method specifies the path of the file in which the NexTrieve
+prigrams store their (error) messages.  By default B<no> logfile is assumed:
+the NexTrieve programs will only send their messages to STDERR.
+
 =head1 INDEXCREATION METHODS
 
-The following methods apply to the <indexcreation> section.
+The following methods apply to the <indexcreation> section of the so-called
+NexTrieve resource-file.  These values are generally only used once during the
+initial indexing process that sets up the internal data-structurs of a
+NexTrieve index, as performed by the NexTrieve "ntvindex" program (accessible
+with the NexTrieve::Index module).
 
 =head2 attribute
 
@@ -641,73 +653,310 @@ The following methods apply to the <indexcreation> section.
                       key-unique | key-duplicates | notkey,
                       1 | * );
 
+The "attribute" method specifies the characteristics of a single attribute
+of the XML to be indexed by NexTrieve.
+
+The first input parameter specifies the "name" of the attribute.
+
+The second input parameter specifies the "type" of the attribute.  Currently
+three types of attributes are supported:
+
+ "flag"
+A binary flag which is either on (1) or off (0).
+
+ "number"
+An unsigned number between 0 and 2147483647 inclusive.
+
+ "string"
+Any string of characters.
+
+The third input parameter specifies whether the attribute is supposed to be
+a "key" or not.  If an attribute is considered to be "key", then multiple
+references of the same value will only occupy a single piece of memory,
+thereby reducing the memory requirements of NexTrieve programs significantly.
+
+Currently three settings are supported:
+
+ "key-unique"
+If an attribute is marked as "key-unique", then only B<one> document can
+exist in the index that contains a specific value for that attribute.  If
+during indexing another document is encountered that has the same value for
+an attribute marked "key-unique", then the original document will be marked
+as "deleted".
+
+ "key-duplicates"
+If an attribute is marked as "key-duplicates", then B<more> than one document
+can contain a specific value for that attribute.  Only the memory-saving
+feature of keys are then in effect.
+
+ "notkey"
+If an attribute is marked as "notkey", then no attempt is made to save memory
+for the value of the attribute.
+
+The fourth attribute specifies the "multiplicity" of the attribute.  This
+indicates whether an attribute can only have one value associated with it,
+or whether it can have multiple values associated with it.  The following two
+settings are currently supported:
+
+ "1"
+Only one value can be associated with this attribute.  If the value is omitted,
+0 is assumed for "flag" and "numeric" type attributes and the empty string is
+assumed for "string" type attributes.
+
+ "*"
+Any number of values can be associated with this attribute.  If no values
+are specified for this attribute, it means just that: that there are no
+values specified for this attribute.
+
+It should be noted that more features may be added to attributes in the future.
+Please check this space for any additions.
+
 =head2 attributes
 
  @attribute = $resource->attributes;
- $resource->attributes( name1 | [name1,type1,key1,nvals1], name2 .. nameN )
+ $resource->attributes( [name1,type1,key1,nvals1], [name2..] .. [nameN..] )
+
+The "attributes" method allows you to specify B<all> attributes that should
+be associated with a document.  Each input parameter specifies the specifics
+of one attribute as a reference to a list in which the parameters have the
+same order as the L<attribute> method.
 
 =head2 texttype
 
  ($weight) = $resource->texttype( name );
  $resource->texttype( name,weight );
 
+The "texttype" method specifies the characteristics of a single texttype
+of the XML to be indexed by NexTrieve.
+
+The first input parameter specifies the "name" of the texttype.
+
+The second input parameter specifies the default "weight" of the texttype.
+The weight of a texttype used in queries, can be overridden in the XML of the
+query, as accessed or generated by the NexTrieve::Query module.  A default of
+"100" will be assumed if no default weight is specified.
+
 =head2 texttypes
 
  @texttype = $resource->texttypes;
- $resource->texttypes( name1 | [name1,weight1], name2 .. nameN );
+ $resource->texttypes( [name1,weight1], [name2..] .. [nameN..] );
+
+The "texttypes" method allows you to specify B<all> texttypes that should
+be associated with a document.  Each input parameter specifies the specifics
+of one texttype as a reference to a list in which the parameters have the
+same order as the L<texttype> method.
 
 =head1 INDEXING METHODS
 
-The following methods apply to the <indexing> section.
-
-=head2 unknowntext
-
- $resource->unknowntext( log | !log | stop, ignore | default );
- ($logaction,$indexaction) = $resource->unknowntext;
-
-=head2 nestedtext
-
- $resource->nestedtext( log | !log | stop, ignore | inherit );
- ($logaction,$indexaction) = $resource->nestedtext;
-
-=head2 unknownattrs
-
- $resource->unknownattrs( log | !log | stop );
- $logaction = $resource->unknownattrs;
+The following methods apply to the <indexing> section of the so-called
+NexTrieve resource-file.  These values are used during each indexing of a
+NexTrieve index, as performed by the NexTrieve "ntvindex" program (accessible
+with the NexTrieve::Index module).
 
 =head2 nestedattrs
 
  $resource->nestedattrs( log | !log | stop );
  $logaction = $resource->nestedattrs;
 
+The "nestedattrs" method indicates the action that should be performed if,
+during indexing, an XML container is found B<inside> the container of a
+an attribute.
+
+The input parameter specifies what logging action should be performed if this
+occurs.  There are currently 3 settings supported:
+
+ "log"
+Simply log the error to STDERR or the L<logfile> and continue indexing.
+
+ "!log"
+Do B<not> log the error but continue indexing.
+
+ "stop"
+Log the action to STDERR or the L<logfile> and B<stop> indexing.  This setting
+is assumed if method "nestedattrs" is never called.
+
+Please note that the contents of any nested containers will B<never> be added
+to the NexTrieve data-structures.
+
+=head2 nestedtext
+
+ $resource->nestedtext( log | !log | stop, ignore | inherit );
+ ($logaction,$indexaction) = $resource->nestedtext;
+
+The "nestedtext" method indicates the actions that should be performed if,
+during indexing, an XML container is found B<inside> the container of a
+known texttype.
+
+The first input parameter specifies what logging action should be performed.
+There are currently 3 settings supported:
+
+ "log"
+Simply log the error to STDERR or the L<logfile> and continue indexing.  The
+value of the second input parameter is significant.
+
+ "!log"
+Do B<not> log the error but continue indexing.  The value of the second input
+parameter is significant.
+
+ "stop"
+Log the action to STDERR or the L<logfile> and B<stop> indexing.  The value of
+the second input parameter is B<not> significant.  This setting is assumed if
+method "nestedtext" is never called.
+
+The second input parameter specifies what to do with the text inside the
+container of an unknown texttype.  Currently, two settings are supported:
+
+ "ignore"
+Ignore the text in the container completely.
+
+ "inherit"
+Assume the texttype of the container in which the nested container was found.
+
+=head2 unknownattrs
+
+ $resource->unknownattrs( log | !log | stop );
+ $logaction = $resource->unknownattrs;
+
+The "unknownattrs" method indicates the actions that should be performed if,
+during indexing, an XML container is found inside the container of an
+attribute.
+
+The input parameter specifies what logging action should be performed.  There
+are currently 3 settings supported:
+
+ "log"
+Simply log the error to STDERR or the L<logfile> and continue indexing.
+
+ "!log"
+Do B<not> log the error but continue indexing.
+
+ "stop"
+Log the action to STDERR or the L<logfile> and B<stop> indexing. This setting
+is assumed if the "unknownattrs" method is never called.
+
+Please note that the contents of any unknown attribute containers will B<never>
+be added to the NexTrieve data-structures.
+
+=head2 unknowntext
+
+ $resource->unknowntext( log | !log | stop, ignore | default );
+ ($logaction,$indexaction) = $resource->unknowntext;
+
+The "unknowntext" method indicates the actions that should be performed if,
+during indexing, an XML container is found in the <text> container that is
+B<not> known to have been specified as a valid texttype using either the
+L<texttype> or L<texttypes> method.
+
+The first input parameter specifies what logging action should be performed.
+There are currently 3 settings supported:
+
+ "log"
+Simply log the error to STDERR or the L<logfile> and continue indexing.  The
+value of the second input parameter is significant.
+
+ "!log"
+Do B<not> log the error but continue indexing.  The value of the second input
+parameter is significant.
+
+ "stop"
+Log the action to STDERR or the L<logfile> and B<stop> indexing.  The value of
+the second input parameter is B<not> significant.  This setting is assumed
+if the "unknowntext" method is never called.
+
+The second input parameter specifies what to do with the text inside the
+container of an unknown texttype.  Currently, two settings are supported:
+
+ "ignore"
+Ignore the text in the container completely.
+
+ "default"
+Assume the "default" texttype for the text found in the container.
+
 =head1 SEARCHING METHODS
 
-The following methods apply to the <searching> section.
+The following methods apply to the <searching> section of the so-called
+NexTrieve resource-file.  These values are used during the searching of a
+NexTrieve index, as performed by the NexTrieve "ntvsearch" and "ntvsearchd"
+programs (accessible with the NexTrieve::Search module).
 
 =head2 highlight
 
  $resource->highlight( container,on,off );
  ($container,$on,$off) = $resource->highlight;
 
+The "highlight" method specifies which strings should be used to indicate
+highlighted words in the preview of a hit from a hitlist.
+
+The first input parameter must be specified if you want an XML/HTML way of
+specifying a highlighted word.  It specifies the name of the container (without
+the surrounding < and >) in which a highlighted word should be placed.  By
+default, the string 'b' is assumed, causing the <b>highlighted</b> container
+to be used.
+
+The second and third input parameter must be specified if you do not want to
+use an XML/HTML way of specifying a highlighted word.  The second input
+parameter then indicates the string that should be placed B<before> each
+highlighted word and the third input parameter specifies the string to be
+placed B<after> each highlighted word.
+
+Please note that you should be careful to not specify anything as the second
+and third input parameter that may result in invalid XML.  By specifying only
+the first input parameter, you are ensured that the generated hitlist XML will
+always be valid.
+
 =head2 querylog
 
- $resource->querylog( file );
- $querylog = $resource->querylog;
+ $resource->querylog( directory );
+ $querylogdirectory = $resource->querylog;
+
+The "querylog" method specifies the B<directory> in which the "ntvsearchd"
+NexTrieve program (as accessible by the NexTrieve::Daemon module) will create
+a logfile for storing each query made with a timestamp.
+
+A new logfile (whose name is constructed from the current date and time) will
+be created each time the "ntvsearchd" program is started.
+
+Queries will B<not> be logged if the "querylog" method is never called.
+
+Queries from a query log file can be obtained with the NexTrieve::Querylog
+module.
 
 =head2 threads
 
  $resource->threads( connector,worker,core );
  ($connector,$worker,$core) = $resource->threads;
 
+The "threads" method only applies to the "ntvsearchd" NexTrieve program and
+is only applicable if "ntvsearchd" is available in a "threaded" form on your
+platform.  Execute the "executable" method of the NexTrieve::Daemon object to
+check this.
+
+The first input parameter specifies the maximum number of simultaneous
+connections that the search service is capable of handling.  A typical number
+for this is "50".
+
+The second input parameter specifies the maximum number of queries that can
+be active simultaneously.  A number similar to the first input parameter is
+advisable.
+
+The third input parameter specifies the maximum number of simultaneous core
+operations that can take place.  This is typically about 1/10th of the number
+of simultaneous queries, as specified with the second input parameter.
+
+=head1 ULTRALITE METHODS
+
+The <ultralite> container of the NexTrieve resource-file is currently not
+supported by the Perl modules.
+
 =head1 AUTHOR
 
-Elizabeth Mattijsen, <liz@nextrieve.com>.
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
-Please report bugs to <perlbugs@nextrieve.com>.
+Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

@@ -9,7 +9,7 @@ use NexTrieve qw(Daemon);
 $loaded = 1;
 ok( 1 );
 
-my $ntv = NexTrieve->new( {DieOnError => 1} );
+my $ntv = NexTrieve->new( {RaiseError => 1} );
 my $version = $ntv->version;
 
 # 02 Create empty daemon object

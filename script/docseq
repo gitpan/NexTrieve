@@ -1,0 +1,163 @@
+#!/usr/bin/perl -w
+
+#-------------------------------------------------------------------------
+
+# Make sure we pre-declare everything
+# Use the necessary Perl modules
+
+use strict;
+use NexTrieve qw(Docseq);
+
+# Output warning if it is the wrong version
+
+warn <<EOD if $NexTrieve::VERSION ne '0.29';
+$0 is not using the right version of the associated Perl modules.
+Operation of this script may be in error because of this.
+EOD
+
+# Create a NexTrieve object
+
+my $ntv = NexTrieve->new( {PrintError => 1} );
+
+# If there are no arguments specified whatsoever and no files specified in pipe
+#  Make sure we can execute external programs
+#  Show the POD documentation
+#  And exit
+
+if (!@ARGV and -t STDIN) {
+  $ntv->untaint( $ENV{'PATH'} );
+  exec( 'perldoc',$0 );
+  exit;
+}
+
+# Initialize the list of files
+# Initialize the bare XML flag
+# Initialize the defaultencoding
+# Initialize the nopi flag
+# Define the flag to be used
+
+my @filename = ();
+my $bare = '';
+my $defaultencoding = 'iso-8859-1';
+my $nopi = '';
+my $flag;
+
+# For all of the parameters
+#  If it is a (new) flag
+#   Obtain the flag
+#   If forcing no processing instruction, set flag and reset the global flag
+#   Reloop
+#  Warn user if parameter without known flag and exit
+
+foreach (@ARGV) {
+  if (m#^-(\w)#) {
+    $flag = $1;
+    $bare = 1, $flag = '' if $flag eq 'b';
+    $nopi = 1, $flag = '' if $flag eq 'n';
+    next;
+  }
+  warn "Must specify type of parameter first\n",exit unless $flag;
+
+#  Make whatever we got lowercase
+#  Set mailbox if so indicated
+  
+  $_ = lc($_);
+  push( @filename,$_ ) if $flag eq 'f';
+
+# If an encoding is specified
+#  Obtain that encoding
+
+  if ($flag eq 'E') {
+      $defaultencoding = $_; $flag = '';
+  }
+}
+
+# If there are filenames to be read from STDIN
+#  For all of the lines that can be read
+#   Remove the new line (whatever it is)
+#   Save the filename of the mailbox
+
+unless (-t STDIN) {
+  while (<STDIN>) {
+    chomp();
+    push( @filename,$_ );
+  }
+}
+
+# If there are files to be processed
+#  Make sure they are all valid
+# Else (no files)
+#  Warn the user and quit
+
+if (@filename) {
+  @filename = map {m#[ <>`]# ? warn "Skipping $_\n" : $_} @filename;
+} else {
+  die "Nothing to be done!\n";
+}
+
+# Set the default encoding if one specified
+# Create the docseq object
+# Set the bare XML flag if so specified
+# Set the no processor instruction flag if so specified
+# Do the collecting and finish up the stream
+
+$ntv->DefaultInputEncoding( $defaultencoding ) if $defaultencoding;
+my $docseq = $ntv->Docseq;
+$docseq->bare( $bare ) if $bare;
+$docseq->nopi( $nopi ) if $nopi;
+$docseq->stream;
+$docseq->files( @filename )->done;
+
+#-------------------------------------------------------------------------
+
+__END__
+
+=head1 docseq
+
+Very basic document sequence generator.
+
+=head2 Usage
+
+ docseq [-E defaultinputencoding] [-b] [-n] -f filename1 [filenameN...]
+
+=head2 Parameters
+
+ -E specify encoding to assume if no encoding is found (default: "iso-8859-1")
+ -n do not emit the <?xml..?> processor instruction
+ -b do not emit the <ntv:docseq> container (bare XML)
+ -f following parameters should be considered mailbox filenames
+
+Filenames can also be specified on seperate lines on STDIN.
+
+=head2 Example
+
+Convert all the files with the extension "ntvml" in the current directory to
+a document sequence and store the result in the file "xml".
+
+ docseq -f *.ntvml >xml
+
+=head2 Example
+
+Find all files with the extension "ntvml" in the directory "new", create a
+document sequence out of that with ISO-8859-1 encoding and have that indexed
+on the fly.
+
+ ls new/*.ntvml | docseq -e iso-8859-1 | ntvindex -
+
+=head1 AUTHOR
+
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
+
+Please report bugs to <perlbugs@dijkmat.nl>.
+
+=head1 COPYRIGHT
+
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+reserved.  This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+http://www.nextrieve.com and the NexTrieve::xxx modules.
+
+=cut

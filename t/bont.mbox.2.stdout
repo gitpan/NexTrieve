@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<mailbox>t/bont.mbox</mailbox>
+<offset>0</offset>
+<length>66</length>
+<from>me</from>
+<subject>before message</subject>
+</attributes>
+<text>
+<subject>before message</subject>
+Before message
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/bont.mbox</mailbox>
+<offset>66</offset>
+<length>843</length>
+<date>20001203</date>
+<from>James Bont</from>
+<subject>Bont Monthly Newsletter</subject>
+</attributes>
+<text>
+<subject>Bont Monthly Newsletter</subject>
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/bont.mbox</mailbox>
+<offset>909</offset>
+<length>63</length>
+<from>me</from>
+<subject>after message</subject>
+</attributes>
+<text>
+<subject>after message</subject>
+After message
+</text>
+</document>
+</ntv:docseq>

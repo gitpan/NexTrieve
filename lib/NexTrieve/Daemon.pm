@@ -6,7 +6,7 @@ package NexTrieve::Daemon;
 
 use strict;
 @NexTrieve::Daemon::ISA = qw(NexTrieve);
-$NexTrieve::Daemon::VERSION = '0.03';
+$NexTrieve::Daemon::VERSION = '0.29';
 
 # Use all the other NexTrieve modules that we need always
 
@@ -37,7 +37,7 @@ sub _new {
 
   my $class = shift;
   my $self = $class->SUPER::_new( shift );
-  $self->Resource( shift ) if @_;
+  $self->Resource( ref($_[0]) eq 'ARRAY' ? @{shift(@_)} : shift ) if @_;
   $self->serverport( shift ) if @_ and !ref($_[0]);
   $self->Set( shift ) if ref($_[0]);
 
@@ -48,9 +48,13 @@ sub _new {
 
 #------------------------------------------------------------------------
 
-# OUT: 1 flag whether associated NexTrieve executable installed and executable
+# OUT: 1 flag: whether it should work or not
+#      2 expiration date of license ('' if not known)
+#      3 software version
+#      4 database version
+#      5 whether threaded or no
 
-sub executable { -x NexTrieve->new->NexTrievePath.'/ntvsearchd' } #executable
+sub executable { NexTrieve->executable( 'ntvsearchd' ) } #executable
 
 #------------------------------------------------------------------------
 
@@ -64,15 +68,61 @@ sub auto_shutdown { shift->_class_variable('auto_shutdown',@_) } #auto_shutdown
 
 #------------------------------------------------------------------------
 
+# OUT: 1 number of bytes read into buffers
+
+sub initial_speedup {
+
+# Obtain the object
+# Initialize number of bytes read
+
+  my $self = shift;
+  my $bytes = 0;
+
+# Obtain the indexdir
+# If we don't have an indexdir
+#  Add error and return
+
+  my $indexdir = $self->indexdir || $self->Resource->indexdir;
+  unless ($indexdir) {
+    $self->_add_error(
+     "Must have an indexdir if not started with same object" );
+    return $bytes;
+  }
+
+# For all of the appropriate files in the indexdir
+#  Attempt to open the file for reading
+#  Reloop if failed
+#  Add the number of bytes to the file
+#  Loop while we're reading the file
+#  Close the handle
+
+  foreach my $file (<$indexdir/ref*.ntv>) {
+    my $handle = $self->openfile( $file,'<' );
+    next unless $handle;
+    $bytes += -s $handle;
+    1 while <$handle>;
+    close( $handle );
+  }
+
+# Return number of bytes read
+
+  return $bytes;
+} #initial_speedup
+
+#------------------------------------------------------------------------
+
+#  IN: 1 port on which server is running (default: started with or serverport)
 # OUT: 1 PID of daemon after successful startup
 
 sub pid {
 
 # Obtain the object
-# Return the pid from the object or go find it
+# Create the field name
+# Return the pid from the object or go find it if not in object or specific port
 
   my $self = shift;
-  return $self->{ref($self).'::pid'} || $self->_findpid;
+  my $field = ref($self).'::pid';
+  return @_ ? $self->_findpid( @_ ) : $self->{$field} || $self->_findpid;
 } #pid
 
 #------------------------------------------------------------------------
@@ -110,6 +160,19 @@ EOD
 
 #------------------------------------------------------------------------
 
+sub restart {
+
+# Obtain the object
+# Stop the server
+# Start it again
+
+  my $self = shift;
+  $self->stop;
+  $self->start;
+} #restart
+
+#------------------------------------------------------------------------
+
 #  IN: new server:port specification
 # OUT: current/old server:port specification
 
@@ -117,9 +180,9 @@ sub serverport { shift->_class_variable( 'serverport',@_ ) } #serverport
 
 #------------------------------------------------------------------------
 
-#  IN: 1 server:port specification
+#  IN: 1 server:port specification (default: in object)
 #      2 user under which to execute as (default: no change)
-# OUT: 1 the object itself
+# OUT: 1 the object itself (handy for oneliners)
 
 sub start {
 
@@ -157,7 +220,7 @@ sub start {
     $server ||= 'localhost';
     $self->serverport( "$server:$port" );
     $self->{$class.'::command'} =
-     $command = "$command -A $server -P $port -L $log$user 2>/dev/null";
+     $command = "$command -A $server -P $port -L $log$user";
     my $exit = system( $command );
 
 #  Add error if there was a problem
@@ -185,14 +248,16 @@ sub stop {
 # Return now if failed
 
   my $self = shift;
-  my $pid = $self->pid;
+  my $pid = $self->pid( @_ );
   return unless $pid;
 
 # Kill the process of which we found the PID and remember # processes killed
+# Remove the pid info from the object
 # Give it a little while
 # Return the result of the kill
 
   my $processes = kill( 15,$pid ); # SIGTERM
+  delete( $self->{ref($self).'::pid'} );
   sleep( 1 );
   return $processes;
 } #stop
@@ -203,6 +268,7 @@ sub stop {
 
 #------------------------------------------------------------------------
 
+#  IN: 1 port on which server is running (default: started with or serverport)
 # OUT: 1 pid (if available)
 
 sub _findpid {
@@ -284,7 +350,7 @@ sub _pid {
 # Close the PIDfile
 # Return the PID
 
-  my $handle = $self->openfile( $pidfile );
+  my $handle = $self->openfile( $pidfile,'<' );
   chomp( my $pid = $self->{$class.'::pid'} = <$handle> );
   close( $handle );
   return $pid;
@@ -311,7 +377,7 @@ __END__
 
 =head1 NAME
 
-NexTrieve::Daemon - handle NexTrieve as a daemon
+NexTrieve::Daemon - handle NexTrieve running as a daemon
 
 =head1 SYNOPSIS
 
@@ -341,59 +407,162 @@ These methods are available as class methods.
 =head2 executable
 
  $executable = NexTrieve::Daemon->executable;
+ ($program,$expiration,$software,$database,$threaded) = NexTrieve::Daemon->executable;
 
-=head1 METHODS
+Return information about the associated NexTrieve program "ntvsearchd".
+
+The first output parameter contains the full program name of the NexTrieve
+executable "ntvsearchd".  It contains the empty string if the "ntvsearchd"
+executable could not be found or is not executable by the effective user.
+Can be used as a flag.  Is the only parameter returned in a scalar context.
+
+If this method is called in a list context, an attempt is made to execute
+the NexTrieve program "ntvsearchd" to obtain additional information.  Then
+the following output parameters are returned.
+
+The second output parameter returns the expiration date of the license that
+NexTrieve is using by default.  If available, then the date is returned as a
+datestamp (YYYYMMDD).
+
+The third output parameter returns the version of the NexTrieve software that
+is being used.  It is a string in the form "M.m.rr", whereby "M" is the major
+release number, "m" is the minor release number and "rr" is the build number.
+
+The fourth output parameter returns the version of the internal database that
+will be created by the version of the NexTrieve software that is being used.
+It is a string in the form "M.m.rr", whereby "M" is the major release number,
+"m" is the minor release number and "rr" is the build number.
+
+The fifth output parameter returns a flag whether this version of the NexTrieve
+software is threaded or not.
+
+=head1 OBJECT METHODS
+
+These methods are available to the NexTrieve::Daemon object.
+
+=head2 Resource
+
+ $resource = $daemon->Resource;
+ $daemon->Resource( $resource | file | xml | {method => value} );
+
+The "Resource" method is primarily intended to allow you to obtain the
+NexTrieve::Resource object that is (indirectly) created when the
+NexTrieve::Daemon object is created.  If necessary, it can also be used
+to create a new NexTrieve::Resource object associated with the
+NexTrieve::Daemon object.
+
+See the NexTrieve::Resource module for more information.
+
+=head1 OTHER METHODS
 
 These methods are available to the NexTrieve::Daemon object.
 
 =head2 auto_shutdown
 
- $daemon->auto_shutdown( 1 );
+ $daemon->auto_shutdown( true | false );
  $auto_shutdown = $daemon->auto_shutdown;
+
+The "autoshutdown" method specifies whether the server process that is started
+with L<start> should be automatically L<stop>ped when the NexTrieve::Daemon
+object is destroyed.  By default, the server process will _not_ be shut down
+when the object is destroyed.
 
 =head2 indexdir
 
  $daemon->indexdir( directory );
  $directory = $daemon->indexdir;
 
-=head2 Resource
+The "indexdir" method specifies an indexdirectory B<other> than the
+indexdirectory that is specified in the L<Resource> object.  By default, the
+indexdirectory information from the L<Resource> object is used.
 
- $resource = $daemon->Resource( | file | xml | {method => value} );
+=head2 pid
+
+ $pid = $daemon->pid;
+
+The "pid" method returns the process-id (or PID) of the server process.  It
+sets an error if the PID could not be found, in which case it will also return
+undef.
+
+=head2 pidfile
+
+ $pidfile = $daemon->pidfile;
+
+The "pidfile" method returns the absolute path where the file that contains
+the process-id (or PID) of the server process.
+
+=head2 ping
+
+ $alive = $daemon->ping;
+
+The "ping" method returns whether the server process associated with the
+NexTrieve::Daemon object, is still running.
+
+=head2 restart
+
+ $daemon->restart;
+
+The "restart" method indicates that the current server process associated with
+the NexTrieve::Daemon object, should be stopped and a new server process,
+using the specifics of the current NexTrieve::Daemon object, should be started.
+Check the L<pid> method afterwards to check whether a server process has
+started.  Use the L<start> method to start a server process and the L<stop>
+method to stop a server process.
 
 =head2 serverport
 
  $daemon->serverport( server:port | port );
  $serverport = $daemon->serverport;
 
-=head2 pid
+The "serverport" method specifies which server address and port should be
+used by the server process of this NexTrieve::Daemon object.  The input
+parameter may consist of:
 
- $pid = $daemon->pid;
+- just a port number
 
-=head2 pidfile
+If you want to have the server process bind to the "localhost" address, then
+just specifying the port number to which the server process should bind, is
+enough.  See the "anyport" method of the NexTrieve.pm module to obtain a random
+port number if you don't know of one yourself.
 
- $pidfile = $daemon->pidfile;
+- server:port specification
 
-=head2 ping
-
- $alive = $daemon->ping;
+If you specify a server name or IP-address and a port number seperated by a
+colon, then the server process will attempt to bind to the port number and
+the interface that is handling the (implicitely) specified IP-number.
 
 =head2 start
 
- $exit = $daemon->start( | server:port | port, | user );
+ $daemon->start( | server:port | port, | user );
+
+The "start" method allows you to start a server process.  The first input
+parameter specifies the server:port specification in the same way as the
+L<serverport> method.  If it is omitted, the settings that were created at
+object creation time or of a previous call to the serverport method, will be
+assumed.  See method L<stop> to stop a server process.
+
+The second input parameter only makes sense if the user is currently "root"
+(uid == 0).  If specifies the name (or uid number) of the user as which the
+server process should run.  If no user is specified, it will continue to run
+as the user with which this process is running.
 
 =head2 stop
 
  $killed = $daemon->stop;
 
+The "stop" method can be called to stop the server process that is associated
+with the NexTrieve::Daemon object.  It returns a flag indicating whether the
+attempt was successful or not.  See method L<start> to start a server process.
+
 =head1 AUTHOR
 
-Elizabeth Mattijsen, <liz@nextrieve.com>.
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
-Please report bugs to <perlbugs@nextrieve.com>.
+Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

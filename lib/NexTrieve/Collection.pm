@@ -6,7 +6,7 @@ package NexTrieve::Collection;
 
 use strict;
 @NexTrieve::Collection::ISA = qw(NexTrieve);
-$NexTrieve::Collection::VERSION = '0.03';
+$NexTrieve::Collection::VERSION = '0.29';
 
 # Use all the other NexTrieve modules that we need always
 
@@ -201,13 +201,13 @@ These are the other methods.
 
 =head1 AUTHOR
 
-Elizabeth Mattijsen, <liz@nextrieve.com>.
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
-Please report bugs to <perlbugs@nextrieve.com>.
+Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

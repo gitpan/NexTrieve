@@ -6,7 +6,7 @@ package NexTrieve::Replay;
 
 use strict;
 @NexTrieve::Replay::ISA = qw(NexTrieve);
-$NexTrieve::Replay::VERSION = '0.03';
+$NexTrieve::Replay::VERSION = '0.29';
 
 # Use all of the NexTrieve submodules that we need for sure
 
@@ -20,6 +20,12 @@ use NexTrieve::Search ();
 #------------------------------------------------------------------------
 
 # The following methods return objects
+
+#------------------------------------------------------------------------
+
+# OUT: 1 Query object associated with last Hitlist obtained
+
+sub Query { $_[0]->{ref(shift).'::Query'} } #Query
 
 #------------------------------------------------------------------------
 
@@ -63,18 +69,13 @@ sub Hitlist {
 
   my $query = $self->{$class.'::Querylog'}->Query;
   return unless $query;
-  return $self->{$class.'::Search'}->Hitlist( $query );
+  return $self->{$class.'::Search'}->Hitlist(
+   $self->{$class.'::Query'} = $query );
 } #Hitlist
 
 #------------------------------------------------------------------------
 
 # The following objects apply to the object
-
-#------------------------------------------------------------------------
-
-# OUT: 1 external command to be executed for search (daemon)
-
-sub command { shift->Search->command } #command;
 
 #------------------------------------------------------------------------
 
@@ -106,41 +107,79 @@ NexTrieve::Replay - replay Querylog objects against Search objects
 The Replay object of the Perl support for NexTrieve.  Do not create
 directly, but through the Replay method of the NexTrieve object.
 
-=head1 METHODS
+The NexTrieve::Replay module allows you to re-perform queries that were logged
+in a query log file, to be searched again against the same or another
+search engine service.  It is mainly intended for debugging and research
+purposes.
 
-These methods are available to the NexTrieve::Replay object.
+=head1 OBJECT METHODS
+
+The following methods return objects.
 
 =head2 Hitlist
 
  $hitlist = $replay->Hitlist;
+
+The "Hitlist" method returns the next NexTrieve::Hitlist object that was the
+result of the next L<Query> that was found in the L<Querylog> that was "played"
+against the L<Search> object.
+
+The undefined value is returned when there were no more queries available in
+the query log file.  The L<eof> method can be called in advance to find out
+whether there are any queries left in the query log file.
+
+See the NexTrieve::Hitlist module for more information.
+
+=head2 Query
+
+ $query = $replay->Query;
+
+The "Query" method returns the NexTrieve::Query object that was used to create
+the last NexTrieve::L<Hitlist> object that was returned.
+
+See the NexTrieve::Query module for more information.
 
 =head2 Querylog
 
  $replay->Querylog( $ntv->Querylog( filename ) );
  $querylog = $replay->Querylog;
 
+The "Querylog" method specifies the NexTrieve::Querylog object that should be
+used to obtain queries from.
+
+See the NexTrieve::Querylog module for more information.
+
 =head2 Search
 
  $replay->Search( $ntv->Search( $resource | server:port | port ) );
  $search = $replay->Search;
 
-=head2 command
+The "Search" method specifies the NexTrieve::Search object that should be
+used to send queries to and obtain hitlists from.
 
- $command = $replay->command;
+See the NexTrieve::Search module for more information.
+
+=head1 OTHER METHODS
+
+These methods show other properties of the NexTrieve::Replay module.
 
 =head2 eof
 
  $isnowatend = $replay->eof;
 
+The "eof" method returns whether there are no more queries found in the
+L<Querylog> file.  If it returns true, then all subsequent calls to L<Hitlist>
+will return the undefine value.
+
 =head1 AUTHOR
 
-Elizabeth Mattijsen, <liz@nextrieve.com>.
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
-Please report bugs to <perlbugs@nextrieve.com>.
+Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

@@ -9,7 +9,7 @@ use NexTrieve qw(Hitlist);
 $loaded = 1;
 ok( 1 );
 
-my $ntv = NexTrieve->new( {DieOnError => 1} );
+my $ntv = NexTrieve->new( {RaiseError => 1} );
 my $version = $ntv->version;
 
 # 02 Create empty hitlist file, check version
@@ -36,7 +36,7 @@ EOD
 $xml =
  qq(<ntv:hitlist xmlns:ntv="http://www.nextrieve.com/$version"></ntv:hitlist>);
 $hitlist = $ntv->Hitlist( $xml );
-ok( $hitlist->xml,$xml );
+$hitlist->xml unless ok( $hitlist->xml,$xml );
 
 # 07 Check if we can create a file
 $filename = "$0.xml";
@@ -46,11 +46,11 @@ ok(-e $filename);
 
 # 08 Check if we can read the file that was just created and has the same result
 $hitlist->read_file( $filename );
-ok($hitlist->xml,$xml);
+$hitlist->xml unless ok($hitlist->xml,$xml);
 
 # 09 Check if we can create a new object with the just created file
 $hitlist = $ntv->Hitlist( $filename );
-ok($hitlist->xml,$xml);
+$hitlist->xml unless ok($hitlist->xml,$xml);
 
 # 10 Check if can be used to update existing file
 unlink( $filename );
@@ -137,4 +137,4 @@ ok(@attr1 == 2 and @attr2 == 1);
 ok($attr1[0] == 1002222 and $attr1[1] = 1102222 and $attr2 == 2002222);
 
 # 26 Check if reading XML produces identical XML
-ok( $hitlist->xml,$xml );
+$hitlist->xml unless ok( $hitlist->xml,$xml );

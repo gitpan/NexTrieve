@@ -8,15 +8,20 @@ END { ok(0) unless $loaded }
 use NexTrieve qw(Search Query);
 $loaded = 1;
 
-unless (NexTrieve::Search->executable) {
+my($executable,$license,$software,$indexlevel) = NexTrieve::Search->executable;
+unless ($executable) {
   print "ok $_ # skip 'ntvsearch' not executable or not found\n" foreach 1..$tests;
   exit;
 }
-ok( 1 );
+ok($software and $indexlevel);
 
-my $ntv = NexTrieve->new( {DieOnError => 1} );
-my $version = $ntv->version;
 my $basedir = $0 =~ m#^(.*?/)[^/]+$# ? $1 : '';
+if (-e "${basedir}ntvskip") {
+  print "ok $_ # skip NexTrieve not functional\n" foreach 2..$tests;
+  exit;
+}
+my $ntv = NexTrieve->new( {RaiseError => 1} );
+my $version = $ntv->version;
 
 # 02 Check indexdir directory
 $indexdir = "${basedir}indexdir";
@@ -27,7 +32,7 @@ $querylog = "${basedir}querylog";
 ok(-d $querylog);
 
 # 04 Check resource file
-my $resourcexml = "$indexdir/resource.xml";
+my $resourcexml = "${basedir}resource.xml";
 ok(-e $resourcexml);
 my $resource = $ntv->Resource( $resourcexml );
 

@@ -9,7 +9,7 @@ use NexTrieve qw(Index);
 $loaded = 1;
 ok( 1 );
 
-my $ntv = NexTrieve->new( {DieOnError => 1} );
+my $ntv = NexTrieve->new( {RaiseError => 1} );
 my $version = $ntv->version;
 
 # 02 Create empty index object
@@ -27,5 +27,5 @@ $index = $ntv->Index( $filename );
 ok(ref($index->Resource),ref($resource));
 
 # 05 Check if creation of index object with parameters works
-$index = $ntv->Index( {basedir => '/home/user/nextrieve'} );
+$index = $ntv->Index( {indexdir => '/home/user/nextrieve/index'} );
 ok(ref($index->Resource),ref($resource));

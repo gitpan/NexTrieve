@@ -6,7 +6,7 @@ package NexTrieve::Document;
 
 use strict;
 @NexTrieve::Document::ISA = qw(NexTrieve);
-$NexTrieve::Document::VERSION = '0.03';
+$NexTrieve::Document::VERSION = '0.29';
 
 # Return true value for use
 
@@ -46,6 +46,33 @@ sub attributes {
   $self->_kill_xml;
   @{$self->{ref($self).'::attributes'}} = @_;
 } #attributes
+
+#------------------------------------------------------------------------
+
+#  IN: 1 xml to be processed
+# OUT: 1 object itself
+
+sub read_string {
+
+# Obtain the object
+# Do whatever we normally do
+
+  my $self = shift;
+  $self->SUPER::read_string( @_ );
+
+# Obtain the class
+# If there is an xml processing instruction in the XML (removing it on the fly)
+#  Set the encoding of the object if there is an encoding
+
+  my $class = ref($self);
+  if ($self->{$class.'::xml'} =~ s#^\s*<\?xml(.*?)\?>\n?##s) {
+    $self->{$class.'::encoding'} = $1 if $1 =~ m#encoding="([^"]*)"#;
+  }
+
+# Return the object
+
+  return $self;
+} #read_string
 
 #------------------------------------------------------------------------
 
@@ -123,8 +150,10 @@ sub _create_xml {
   my $class = ref($self);
   return $self->{$class.'::xml'} if $self->{$class.'::xml'};
 
+# Set the encoding if there is none specified yet
 # Initialize the XML
 
+  $self->encoding( $self->DefaultInputEncoding ) unless $self->encoding;
   my $xml = "<document>\n";
 
 # Set the field name to use
@@ -178,10 +207,10 @@ sub _create_xml {
     $xml .= "</text>\n";
   }
 
-# Close the document container
+# Close the document container or empy out completely if nothing in it
 # Return the finished XML
 
-  $xml .= "</document>";
+  $xml = $xml eq "<document>\n" ? '' : "$xml</document>";
   return $self->{$class.'::xml'} = $xml;
 } #_create_xml
 
@@ -200,7 +229,7 @@ NexTrieve::Document - create XML for indexing a single document
  $index = $ntv->Index( | filename | xml | $resource );
 
  $docseq = $index->Docseq( | encoding );
- $document = $ntv->Document( | {method->value} );
+ $document = $ntv->Document( | {method => value} );
  $docseq->add( $document );
 
 =head1 DESCRIPTION
@@ -210,6 +239,11 @@ directly, but through the Document method of the NexTrieve object.
 
  $document = $ntv->Document( | {method => value} );
 
+Please note that many of the other modules have NexTrieve::Document object
+creation routines of their own, usually called "Document".  So only if you
+would like to get your hands dirty, creating NexTrieve::Document objects of
+your own design, is when you actually use methods of this module directly.
+
 =head1 METHODS
 
 The following methods apply to the adding of attributes and text.
@@ -218,27 +252,149 @@ The following methods apply to the adding of attributes and text.
 
  $document->attribute( name,@value );
 
+The "attribute" method adds one or more attributes with the same name to the
+NexTrieve::Document object.  When the XML of the document object is serialized,
+then each attribute container will be a descendant of the <attributes>
+container of the document XML.
+
+The strings that are stored as the values of the attribute, should already be
+encoded in the same manner as the encoding of the document indicates.
+
+The first input parameter specifies the name of the attribute.
+
+The other input parameter specify values for which an attribute container with
+the given name should be added.  Please note that if you specify more than one
+value, the attribute B<must> be known in the NexTrieve resource-file with a
+multiplicity of "*".
+
+For example:
+
+ $document->attribute( 'title','This is the title' );
+
+will cause the following XML to be generated (if it was the only call):
+
+ <attributes>
+ <title>This is the title</title>
+ </attributes>
+
+Another example:
+
+ $document->attribute( 'category',1,2,3,4 );
+
+will cause the following XML to be generated (if it was the only call):
+
+ <attributes>
+ <category>1</category>
+ <category>2</category>
+ <category>3</category>
+ <category>4</category>
+ </attributes>
+
+See the L<attributes> method for specifying B<all> attributes of a document at
+the same time.
+
 =head2 attributes
 
  $document->attributes( [name1,@value1], [name2,@value2] ... [nameN,@valueN] )
 
+The "attributes" method adds B<all> attributes of a document at the same time.
+The input parameters each should be a reference to a list.  Each of these
+lists have the same input parameter sequence as a single call to method
+L<attribute>: the first element specifies the name of the attribute, the other
+elements specify values for which to create containers with the given name.
+
+Please note that calling method "attributes" will throw away any other
+attributes that have been previously specified with either a call to method
+L<attribute> or "attributes".  So you typically only call method "attributes"
+only once during the lifetime of an object.
+
 =head2 text
 
- $document->text( | name,@text );
+ $document->text( text | name,@text );
+
+The "text" method allows you to either add a basic text (to be placed in the
+<text> container without container) or one or more named texttypes.
+
+The strings that are stored as the values of the texttypes, should already be
+encoded in the same manner as the encoding of the document indicates.
+
+If only one input parameter is specified, it is assumed to be a text that is
+to be added without container.
+
+If more than one input parameter is specified, then the first input parameter
+is the name of the texttype to serialize the text in.  In that case, all the
+other input parameters indicate the values to be serialized in those containers.
+
+For example:
+
+ $document->text( 'This is the text' );
+
+will cause the following XML to be generated (if it was the only call):
+
+ <text>
+ This is the text
+ </attributes>
+
+Another example:
+
+ $document->text( 'p',qw(one two three four) );
+
+will cause the following XML to be generated (if it was the only call):
+
+ <text>
+ <p>one</p>
+ <p>two</p>
+ <p>three</p>
+ <p>four</p>
+ </text>
+
+See the L<texts> method for specifying B<all> text of a document at the same
+time.
 
 =head2 texts
 
- $document->texts( [name1,@value1], [name2,@value2] ... [nameN,@valueN] );
+ $document->texts( [text], [name1,@value1], ... [nameN,@valueN] );
+
+The "texts" method adds B<all> text of a document at the same time.  The input
+parameters each should be a reference to a list.  Each of these lists have the
+same input parameter sequence as a single call to method L<text>: if there is
+only one element, it is a text without container, else the first element
+specifies the name of the texttype, the other elements specify values for which
+to create containers with the given name.
+
+Please note that calling method "texts" will throw away any other texts that
+have been previously specified with either a call to method L<text> or "texts".
+So you typically only call method "texts" only once during the lifetime of an
+object.
+
+=head2 xml
+
+ $xml = $document->xml;
+ $document->xml( $xml );
+
+The "xml" method can be called on the NexTrieve::Document object, but is
+B<different> from all the other "xml" methods that can be called on other
+objects.
+
+The XML returned by the NexTrieve::Document object B<never> contains an XML
+processor instruction.  This is because the Nextrieve::Document object is
+supposed to become part of a document sequence, in which the XML processor
+instruction would cause problems.
+
+This also means that, although you can save the NexTrieve::Document object
+in a file, it is not wise to do so if the encoding of the object is different
+from "UTF-8" (the default encoding assumed if there is no XML processor
+instruction in an XML stream).
 
 =head1 AUTHOR
 
-Elizabeth Mattijsen, <liz@nextrieve.com>.
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
-Please report bugs to <perlbugs@nextrieve.com>.
+Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

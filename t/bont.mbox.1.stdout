@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<mailbox>t/bont.mbox</mailbox>
+<offset>0</offset>
+<length>71</length>
+<from>me</from>
+<subject>before message</subject>
+</attributes>
+<text>
+<subject>before message</subject>
+Before message
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/bont.mbox</mailbox>
+<offset>71</offset>
+<length>848</length>
+<date>20001203</date>
+<from>James Bont</from>
+<subject>Bont Monthly Newsletter</subject>
+</attributes>
+<text>
+<subject>Bont Monthly Newsletter</subject>
+Welcome to the new look monthly Bont Newsletter 
+ 
+                        Welcome
+            to the December issue of the monthly Bont Newsletter. Inside you will find out
+            about all the latest
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/bont.mbox</mailbox>
+<offset>919</offset>
+<length>68</length>
+<from>me</from>
+<subject>after message</subject>
+</attributes>
+<text>
+<subject>after message</subject>
+After message
+</text>
+</document>
+</ntv:docseq>

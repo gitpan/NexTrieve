@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<filename>t/badform.html</filename>
+<title>Introduction </title>
+</attributes>
+<text>
+<title>Introduction </title>
+Chapter 1. Introduction     Table of Contents  1.1. Scope of Document    The Internet Domain Name System ( DNS ) consists of the syntax
+  to specify the names of entities in the Internet in a hierarchical
+  manner, the rules used for delegating authority over names, and the
+  system implementation that actually maps names to Internet
+  addresses.   DNS  data is maintained in a group of distributed
+  hierarchical databases.
+</text>
+</document>
+</ntv:docseq>

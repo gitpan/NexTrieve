@@ -1,0 +1,29 @@
+From me
+To: you
+Subject: before subject
+
+before message
+
+From someone  Sat May  3 00:05:31 1997
+From: someone
+To: me
+Subject: ze zubject
+Date: Fri, 2 May 1997 15:06:29 -0400
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_000_01BC570A.69CC08C0"
+X-MimeOLE: Produced By Microsoft MimeOLE Engine V4.71.0544.0
+Precedence: bulk
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_01BC570A.69CC08C0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+
+From me
+To: you
+Subject: after subject
+
+after message

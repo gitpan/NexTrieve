@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<mailbox>t/realvideo.mbox</mailbox>
+<offset>0</offset>
+<length>57</length>
+<subject>before subject</subject>
+</attributes>
+<text>
+<subject>before subject</subject>
+before message
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/realvideo.mbox</mailbox>
+<offset>57</offset>
+<length>1414</length>
+<date>20000809</date>
+<from>A Stone</from>
+<subject>Real video clip</subject>
+</attributes>
+<text>
+<subject>Real video clip</subject>
+Horrifying and hilarious at the same time, this is the kind of tv my 
+mother watches.
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/realvideo.mbox</mailbox>
+<offset>1471</offset>
+<length>54</length>
+<subject>after subject</subject>
+</attributes>
+<text>
+<subject>after subject</subject>
+after message
+</text>
+</document>
+</ntv:docseq>

@@ -1,3 +1,850 @@
+0.29	11 March 2002
+	Some documentation fixes to Message.pm and NexTrieve.pm.  Renamed
+	Overview.pod back to Overview.pm, as that _will_ show up for reading
+	on the various CPAN related websites.
+
+0.28	11 March 2002
+	Finished initial version of Message.pm after some more discussions with
+	Mark Overmeer.  There doesn't seem to be a need for a Mail::Box
+	interface yet, so that source will be dumped now.
+
+	Changed Overview.pm to Overview.pod.
+
+	10 March 2002
+	Created MIME.pm module as a stash for MIME-conversion routines.
+	Adapted RFC822.pm so that it uses the new MIME.pm module, removed its
+	own versions of _plain and _html.
+
+	Started work on Message.pm for converting Perl Mail::Message objects to
+	document sequences.  Added test-suite for it as well.  Initially
+	developed as NexTrieve::Mail::Box.pm, but this turned out to be too
+	much double work.  After discussions with Mark Overmeer, the author
+	of Mail::Box and Mail::Message, it seemed to make much more sense to
+	interface at the message level rather than at the mailbox level.
+
+	Oops.  Lost the NAME and SYNOPSIS section in Overview.pm while
+	copying the text that was made off-line.  Restored again now.  This
+	caused the Overview.pm to become "invisible" on CPAN, which is a
+	pity for a module that consists of documentation only.
+
+0.27	9 March 2002
+	Added documentation for methods "texttype" and "texttypes" to the
+	Query.pm module: they were missing.
+
+	Added Overview.pm documentation module.  Moved some of the
+	documentation from NexTrieve.pm to it.
+
+0.26	6 March 2002
+	Finished first complete documentation of Resource.pm.
+
+	Removed the "basedir" method from Resource.pm.  The NexTrieve "basedir"
+	feature is on the way out and shouldn't have existed in the Perl
+	modules in the first place.  Needed to adapt quite some tests in the
+	test-suite as they used "basedir" as an example method.
+
+0.25	5 March 2002
+	Finished first complete documentation of Query.pm, Querylog.pm,
+	Replay.pm and Search.pm.
+
+	Added Query method to Replay.pm.
+
+	Added documentation for "ampersandize" and "normalize" to NexTrieve.pm.
+
+0.24	4 March 2002
+	Finished first complete documentation of Docseq.pm, Document.pm,
+	Hitlist.pm, Hitlist::Hit.pm, Index.pm, Mbox.pm.
+
+	Changed method "ResourceFromIndex" in Index.pm to use "ntvcheck" rather
+	than "ntvopt": the --xml functionality should be there.  Adapted
+	test-suite so it now correctly handles the absence of --xml
+	functionality in ntvcheck.
+
+	3 March 2002
+	Finished first complete documentation of Daemon.pm.
+
+	Adapted method "executable" in NexTrieve.pm to return the license
+	expiration info as a datestamp: YYYYMMDD.
+
+	Changed method "PrintError" in NexTrieve.pm to accept the "cluck"
+	keyword.  If specified, the $SIG{__WARN__} handler is set to
+	Carp::cluck.
+
+	Changed method "RaiseError" in NexTrieve.pm to accept the "confess"
+	keyword.  If specified, the $SIG{__DIE__} handler is set to
+	Carp::confess.
+
+	Changed method "ResourceFromIndex" in Index.pm to use "ntvopt" rather
+	than "ntvcheck": the --xml functionality seems to have moved.
+
+	Finished first complete documentation of DBI.pm.
+
+	Finished first complete documentation of RFC822.pm.
+
+	Removed "use NexTrieve::Resource" from HTML.pm and RFC822.pm.  They
+	are only needed when the "Resource" method would be called, which is
+	not too often.  The NexTrieve::Resource module must now be explicitely
+	specified in the "use NexTrieve qw()" list when needed.  Adapted the
+	test-suite accordingly.
+
+	Added "mailsimple" method to RFC822.pm.  Same as default settings of
+	the "mailbox2ntvml" script.
+
+	Finished first complete documentation of HTML.pm.
+
+	Added "embed" to _default_removecontainers in NexTrieve.pm.
+
+	Minor fix to _intext_recode of NexTrieve.pm to handle the case when
+	no input is given.  This was causing a lot of warnings in the
+	test-suite if MIME::xxx were not installed.
+
+	Minor fix to _plain and _html in RFC822.pm to allow handling of empty
+	text and html (which could be caused by MIME::Base64 and
+	MIME::QuotedPrint not being installed).
+
+	Added support for handling the case when MIME::Base64 and
+	MIME::QuotedPrint are not installed.  They were handled by the modules
+	already, but not in the test-suite, causing errors when they shouldn't.
+
+	28 February 2002
+	First half of more complete documentation of HTML.pm.
+
+0.23	28 February 2002
+	Added flag to internal method "_recoding_error" so that a different
+	error message is displayed when some data was actually returned.
+	Adapted method "_iconv" to use this new feature.
+
+	Changed handling of calling external "iconv" from a piped open to a
+	system with temporary input and output files.  Apparently, that is the
+	only way to reliably obtain exit codes from iconv in older versions
+	of Perl.
+
+	Changed the handling of recoding =?encoding?Q?string?= strings inside
+	strings to _process_container.  This should make the handling much
+	more general, and possibly less CPU-intensive as it is only done on
+	elements from the content-hash that are actually converted to
+	attributes or texttypes.  Added "t/headerenc.mbox" and "t/asia.mbox"
+	test-cases.
+
+0.22	27 February 2002
+	Added "archive" method to Mbox.pm.  When an archive is specified, it
+	is assumed to be either a handle or a filename to be opened for
+	appending.  Just before a message is processed, it will be written
+	to the archive, allowing developers to use this for a simple mail
+	archiving system.  Added t/74mbox.t test for this functionality.
+
+	Fixed bug in Mbox that would occur if the same $docseq would be used
+	in multiple runs togethev with a conceptualmailbox and a baseoffset.
+	The second run, the baseoffset of the first run would be used.  Now
+	the baseoffset is updated in the object after a run when a conceptual
+	mailbox is used.
+
+	Changed Mbox.pm also so that a conceptualmailbox is just that and that
+	you need to specify an offset in that case (if it's different from 0
+	that is).  Adapted t/14mbox.t accordingly.
+
+	Made the use of -o obligatory when using -c.  No longer looks up
+	offset assuming conceptualmailbox is a real file somewhere.  Adapted
+	test-suite t/72mbox.t accordingly.  This was in "mailbox2ntvml" of
+	course.
+
+	Fixed minor nit in "mailbox2ntvml": if defined($baseoffset) was not
+	needed at all.
+
+0.21	26 February 2002
+	Fixed problem in the "mailbox2ntvml" script that would ignore the
+	-o (baseoffset) parameter.  Added two test-suites for checking the
+	functionality of the -c and -o parameters of that script.
+
+	Added script "dbi2ntvml" for executing a query in a database and
+	having a document sequence created for the result.
+
+	Fixed problems with broken attachments that don't finish with a newline
+	in RFC822.pm by fixing the "next" and "nextnonewline" of the hidden
+	NexTrieve::handle object in NexTrieve.pm.  Added a test-file
+	"badmime.mbox" to test for this eventuality.
+
+	Fixed problem in scripts "mailbox2ntvml" and "html2ntvml": the -E flag
+	for specifying the default input encoding, did not work.  The default
+	input encoding was always set to 'iso-8859-1'.
+
+	Further refined the ucs-4 and ucs-2 encoding issues: made the
+	"utf3216check" method a lot smarter.  It is now able to detect big
+	and little endian and sets the encoding information appropriately.
+	Added support for "ucs-2le" and "ucs-4le" to UTF8.pm.  Added heuristics
+	to _normalize_encoding to convert "utf-32" and "utf-16" to the
+	appropriate "ucs*" version.  Added HTML-files with little-endian
+	2 and 4 byte encodings to the test-suite.
+
+	Removed "header2attribute" and "header2texttype" methods from
+	RFC822.pm.  Instead, the inheritable "field2attribute" and
+	"field2texttype" should now be used.  Changed the documentation, the
+	test-suite and scripts accordingly.
+
+	Changed name of "ShowErrorsAsWarnings" method in NexTrieve.pm to
+	"PrintError" to conform with the generally accepted way that the
+	"Perl" DBI.pm works.  Changed all occurrences in the modules, scripts
+	and test-suite to reflect this change.
+
+	Changed name of "DieOnError" method in NexTrieve.pm to "RaiseError"
+	to conform with the generally accepted way that the "Perl" DBI.pm
+	works.  Changed all occurrences in the modules, scripts and test-suite
+	to reflect this change.
+
+	Added NexTrieve::DBI.pm module for creating document sequences out of
+	DBI statement handles (actually, any object that has a method that can
+	be called repeatedly and which returns a reference to a hash).  It
+	is now easy to create document sequences out of databases!  Added
+	small test-suite for it: t/15dbi.t.
+
+	Moved "field2attribute" and "field2texttype" methods from HTML.pm to
+	NexTrieve.pm, so they can be inherited by DBI.pm and other modules.
+	Removed the methods from HTML.pm as they are now inherited.
+
+	Removed now obsolete "titlemax" method from RFC822.pm.
+
+	Found that documents encoded in utf-32 or utf-16 were not being handled
+	correctly by html2ntvml.  Fixed this by adding a method "utf3216check"
+	to NexTrieve.pm that will check its input for utf-32 or utf-16
+	encoding (by checking the first 8, respectively 4 bytes of the text)
+	and convert that to utf-8 when deemed to be utf-32/utf-16.  Added
+	call to this method to HTML.pm and added two test-cases, right out of
+	the standard Apache distribution, for these encodings.  Added the
+	conversion from utf-32 and utf-16 (actually: ucs-2be and ucs4-be)
+	to UTF8.pm, so that these conversions are done internally.
+
+0.20	25 February 2002
+	Generalize the handling of <META name/content> pairs in HTML.pm.  Added
+	"author" and "generator" to the content hash as extra keys if
+	available.  Other keys should now be trivial to add and should
+	possibly be customizable externally.
+
+	Sometimes the _iconv method of NexTrieve.pm seems to not be able to
+	create the file.  It now silently exists without invoking _iconv.
+	Should probably be handled differently.
+
+	Added "x-mac-roman" and "windows-874" as a standard encoding that can
+	be handled by UTF8.pm.  This should allow processing of most MAC
+	and some documents with Thai characters.
+
+	Added feature to _fetch_content in NexTrieve.pm that checks for
+	protocol-type specifications in the id specified and, if found,
+	forces a "URL" type fetch.  This change allows URL's to be specified
+	on input anywhere, but most specifically in the "html2ntvml" script.
+
+	Fixed problem in _fetch_from_url in NexTrieve.pm that would cause
+	URL's of the form "http://www.nextrieve.com" (note the missing
+	slash at the end) to fail.
+
+	Removed some superfluous tables from NexTrieve.pm that weren't
+	necessary anymore.
+
+	Fixed baseoffset problem in script "mailbox2ntvml" if the referenced
+	mailbox file didn't exist.  Also killed warning in that case in
+	HTML.pm.
+
+	Found one case of badly formatted HTML that exposed various
+	problems in the Document method of HTML.pm.  Fixed the problems and
+	added a test-case for it in the test-suite.  Fixed the same problems
+	in the HTML-attachment handling of RFC822.pm.
+
+	Changed method "tempfilename" in NexTrieve.pm to use the complete
+	hex address in the filename rather than just the numeric part.
+
+	Added iso-885\d-* as misspellings for iso-8859-* to _normalize_encoding
+	in NexTrieve.pm.  Also added "html" as a misspelling for "iso-8859-1".
+	Added checks in the test-suite to test for these misspellings.
+
+	Added source specification to several error messages in HTML.pm.
+
+	Changed the "create_module" script so that the UTF-8 values are
+	generated at module creation time rather than when substituting the
+	values in strings.  Updated UTF8.pm accordingly.  Should make things
+	significantly faster.
+
+0.19	24 February 2002
+	Added -a and -p flag to "html2ntvml" script to activate the ASP-style
+	and PHP-style tag removal.
+
+	Most of the test-suite scripts will now show the XML if there was an
+	unexpected XML found in any conversion.
+
+	Made the general conversion of containers somewhat stricter in HTML.pm
+	so that there is less chance of throwing away valuable stuff.
+
+	Added methods "asp" and "php" to add a pre-processor subroutine to
+	the HTML-object for removing ASP-style tags in the form <%...%> and
+	PHP-style tags in the form <?...?> from the HTML.  Added checks to
+	make sure that it works.
+
+	Generalized checking of t/70html.t and t/71mbox.t so that regular
+        expressions can be placed in the stderr file, allowing for natural
+	language independent checking of error messages.  This change was
+	inspired by Arnaud ASSAD's report of a problem with a French "speaking"
+	iconv.
+
+	Completed first phase of more or less complete documentation of the
+	NexTrieve.pm module, including small descriptions of the input and
+	output parameters of methods, rather than just an example call.
+
+	Fixed problem with the "encoding" method of NexTrieve.pm: setting an
+	encoding on an object that already has an encoding, now properly saves
+	the XML in the object of which the encoding was changed.
+
+	Added file VERSION so that stuff is easier to keep in CVS.
+
+	Added check for right version of modules to all of the scripts.  Now,
+	a warning will be output if the script notices it is using a version
+	of the modules for which it was not designed.
+
+	Removed -c flag from call to "iconv": there are too many iconv's out
+	there that don't support it.
+
+0.18	23 February 2002
+	Added "-c" flag to call to "iconv" so that it will not bomb on invalid
+	characters.  Hopefully -c is valid to all versions of iconv out there.
+
+	Swiped iso-8859-* and windows-152* to UTF-8 conversion lists from the
+	Internet and created a conversion program that creates the source code
+	to the new NexTrieve::UTF8.pm module.  From now on, all conversions
+	from iso-8859-* and windows-125* to UTF-8 are done natively, i.e.
+	without any external programs.  Removed all the stuff related to
+	recoding that wasn't necessary anymore from NexTrieve.pm.
+
+0.17	22 February 2002
+	Completely rewritten recoding in NexTrieve.pm.  Lost the recoding hash
+	as well as the methods "_text_icon", "_default_recoding_handler",
+	"recode_handler" and "find_recoding".  Instead of being recoding method
+	centric, a "from->to" centric approach has been taken.  For each pair
+	of "from->to" recoding, a handler written in Perl is by default
+	available (e.g. for "iso-8859-1" to "utf-8").  If an encoding pair is
+	not found, first it is checked whether Text::Iconv can handle that
+	recoding.  If so, a closure to the object doing that conversion is
+	created and saved.  If that fails, a closure to an external "iconv"
+	program is created, using the generic "_iconv" method.  This should
+	make recoding faster in many cases, and also handle dependencies on
+	external ways of doing recoding, much better.
+
+	Added some smart alecky way for RFC822.pm to allow the first attachment
+	to set the encoding of the document, rather than assuming iso-8859-1
+	and causing recodings to be done for windows-1252 attachments.
+
+	21 February 2002
+	Added stuff to NexTrieve.pm, HTML.pm, RFC822.pm and Mbox.pm so that
+	if there is a conversion error, the filename and line number (in case
+	of a mailbox) is shown in the error line.
+
+	Added conversion from "windows-1252" to "iso-8859-1" encoding to the
+	default recode handler in NexTrieve.pm.
+
+	Fixed problem with "Text::Iconv" recode handler if specified
+	directly rather than "found", in NexTrieve.pm.
+
+	Added some more checks to _normalize_encoding in NexTrieve.pm so that
+	"iso8859-1" and "iso_8859_1" are converted to "iso-8859-1".  Added
+	some checks for this to t/01basic.t.
+
+	Added ^K as an extra null byte to be removed, in HTML.pm
+
+	20 February 2002
+	Removed character range 0x80-0x9f from illegal character range, as
+	these are valid windows-1252 characters and are no problem in
+	in iso-8859-1 even if they are supposed to be undefined.
+
+	Added _default_recoding_handler to NexTrieve.pm.  This should be able
+	to convert from iso-8859-1 and windows-1252 to utf-8 by itself.
+	Allow this recoding method to be selected by the key "default".
+	Added a test file "win1252.html" to the test-suite.
+
+	Added ^L as an extra null byte to be removed, in HTML.pm
+
+	Fixed "find_recoding" to use the keys in the known recoding methods
+	hash.
+
+0.16	20 February 2002
+	Adapted the check for an external "iconv" in NexTrieve.pm to do an
+	actual conversion, rather than checking for the -V flag.  Should
+	really fix problem spotted by Nyk Cowham on a Mac OSX.
+
+	19 February 2002
+	Fixed problem in "xmllint" of NexTrieve.pm: value was being set even
+	if xmllint would not be available on a platform, causing the
+	test-suite to break.  Spotted by Arnaud ASSAD.
+
+	Added method "shorten" to NexTrieve.pm for shortening strings and
+	making sure there are no broken entities at the end.  Thought it would
+	be nice for processing routines, such as in "html2ntvml" script.
+	Since strings passed to processor routines are not normalized yet,
+	this is not a problem and for that reason this method is not needed.
+	Left in the source anyway as it seems to be a handy routine to have
+	anyway.
+
+	Fixed additional problem with <title> HTML tag by changing the
+	behaviour of _process_container: now the normalization routine is _not_
+	passed as a parameter to the processing routine, but instead the
+	result of the processing routine is normalized before being put into
+	the XML stream.  Added test-script t/70html.t for testing HTML files
+	with the "html2ntvml" script.
+
+	HTLM.pm now also removes ^Z as a null byte from the HTML stream before
+	processing: it appears that many Mac's and/or DOS editors add ^Z
+	characters at the end of the document: not removing them would cause
+	such documents be skipped if binary check is active.
+
+0.15	18 February 2002
+	Fixed problem with containers appearing inside a <title> HTML tag in
+	HTML.pm.  Title, keywords and description are now checked for
+	containers and removed as appropriate.  Added a check to the test-suite
+	for this.
+
+	In NexTrieve/RFC822.pm the created document is immediately assumed to
+	be encoded in the DefaultInputEncoding unless there is a valid encoding
+	in the header.  It no longer assumes the encoding of the first
+	processed attachment.  This fixes a bug in the case when the recoding
+	of an attachment can not be done: before this would cause the whole
+	document to be skipped, now only the attachment in question will be
+	skipped.
+
+	The DefaultInputEncoding (in NexTrieve.pm) now defaults to "iso-8859-1"
+	even if never actually set.  This causes a processor instruction to
+	_always_ become part of the XML when serialized and therefore needed
+	some changes to the test-suite.
+
+	In NexTrieve.pm, _normalize_encoding now changes any "us-ascii"
+	encoding name to "iso-8859-1", as "us-ascii" encoded texts in a
+	majority of cases include iso-8859-1 characters which would be
+	considered invalid with "us-ascii".
+
+	Wrapped opening of "iconv -V" in an eval to stop it from bombing if
+	no iconv is available, in NexTrieve.pm.  Fixed after bug-report from
+	Nyk Cowham on a Mac OSX.
+
+0.14	16 February 2002
+	Added new method "DefaultInputEncoding" in NexTrieve.pm.  The value
+	of this method is now directly inherited by all the other modules.
+	Changed all the other modules to use $self->DefaultInputEncoding
+	rather than $self->NexTrieve->encoding.
+
+	Changed the way RFC822.pm reads a message to a nice hidden object
+	method of type NexTrieve::handle (as stored in NexTrieve.pm).  This
+	should possibly fix the memory-hungryness for messages with large
+	attachments.
+
+	Changed the functionality of the "encoding" method: now if there is
+	an encoding already known for the object and a different encoding is
+	specified, then the XML will be serialised (if not already available)
+	and that XML will then be converted to the desired encoding.  Added
+	a special version of the "encoding" method to Docseq.pm, as a Docseq
+	object can only be in UTF-8.
+
+	Changed all modules such that a Docseq object _always_ outputs the
+	serialised XML in UTF-8.  Removed the -e parameter from the scripts
+	as these will always output in UTF-8 also.
+
+	In all situations where either content from a variable or a filename
+	could be specified, it is now possible to add one of more extra
+	parameters to indicate the type of content fetch.  For the moment,
+	three types of content fetching are supported: '' for direct (value
+	is either the string or a reference to a list with a string, id and
+	epoch value), 'filename' to indicate the name of a file and 'url' to
+	indicate the content should be fetched from a URL.  This is all based
+	on the content fetching mechanism in NexTrieve.pm.
+
+	Added documented but missing extra method setting functionality to
+	_new in Querylog.pm.  Fixed problem in test for Querylog.pm in
+	t/82ntvsearchd.pm.
+
+	Added support for content fetching routines to NexTrieve.pm.  Initial
+	base fetching routines are "_fetch_direct", "_fetch_from_filename" and
+	"_fetch_from_url".  Added a central fetching method "_fetch_content".
+	Adapted "_filename_xml" to use this method of obtaining content, which
+	thus effectively allows this functionality from all module object
+	creation routines, such as $ntv->Resource.
+
+0.13	16 February 2002
+	Moved character encoding issues from _process_part in RFC822.pm to the
+	mime-processor routines "_plain" and "_html".  Adapted "_html" so that
+	it can work with HTML that specifies a different encoding as a <meta>
+	tag in the HTML from the one specified in the header.  Added example
+	"bont.mbox" to list of tests.
+
+	Added support for binarycheck to RFC822.pm.  Added support for -i flag
+	to mailbox2ntvml.  Added example "ls.mbox" to list of tests.
+
+	Moved method "binarycheck" method from HTML.pm to NexTrieve.pm so that
+	it can be inherited by RFC822.pm.
+
+	Made sure no XML is returned from Document.pm if there is nothing
+	in it (before an empty <document> container would be returned).  Fixed
+	test to reflect this new behaviour.
+
+	15 February 2002
+	Fixed warning in Docseq.pm if there was nothing to be piped.
+
+	12 February 2002
+	Added general method "xmllint" to NexTrieve.pm.  When invoked with a
+	true value, will attempt to locate the program "xmllint" of the
+	libxml2 package.  If found, any future actions that invoke
+	"write_string" either directly or indirectly (through an invocation
+	of "write_fh", "write_file" or "xml") will cause the generated XML
+	to be checked with the xmllint program and _if_ errors were found,
+	nullify the XML and add an error (with the error info from xmllint)
+	to the object.  Mainly intended for internal debugging, but maybe
+	useful in other situations as well.
+
+0.12	12 February 2002
+	Added -E flag to scripts docseq, mailbox2ntvml and html2ntvml to
+	allow specification of the default input encoding to be assumed in case
+	there is no other input encoding information available.  Defaults to
+	"iso-8859-1".
+
+	Fixed conceptualmailbox functionality in script mailbox2ntvml and fixed
+	some warnings by properly initializing some variables in all scripts.
+
+	Added support for handling intext coded text in the form
+	=?iso-8859-2?Q?string=A9?=. to the headers in RFC822.pm and added a
+	test mbox for that case.  Made small change to "recode" in NexTrieve.pm
+	to be able to support this.
+
+	Added method "bare" (for "bare XML") to Docseq.pm allowing the
+	<ntv:docseq> container to _not_ be emitted.  Moved -b flag (binary
+	check) of html2ntvml script to -i.  Added -b flag to docseq, html2ntvml
+	and mailbox2ntvml scripts.
+
+	Added general method "nopi" (for "no processor instruction") to
+	NexTrieve.pm.  When applied to an object, it will cause the <?xml..>
+	to _not_ be emitted when XML is created for that object.  Adapted the
+	docseq, html2ntvml and mailbox2ntvml scripts to allow for a -n flag
+	to omit the <?xml..?> processor instruction.
+
+	Fixed problem with dates not being processed in script/mailbox2ntvml
+	that was introduced yesterday as a result of some testing and the
+	Date::Parse absence fix.
+
+0.11	11 February 2002
+	Fixed problem in "_iconv" of NexTrieve.pm.  For some strange reason,
+	Perl would die if an encoding was encountered that was not supported
+	by iconv, even though the call was wrapped in an eval{}.
+
+	Checked all modules for calls to "openfile" and made sure that "slurp"
+	and "splat" were being used when appropriate.  Also made sure that
+	when a file is being opened for reading, an explicit filemode is
+	specified.
+
+	Added method "splat" to NexTrieve.pm to write data to a handle and
+	then close the handle (the opposite of "slurp").
+
+	Added method "slurp" to NexTrieve.pm to read the entire contents of
+	an open handle.  Adapted all modules that had the memory-hungry
+	structure with join( '',<$handle> ) to now use $self->slurp( $handle ).
+
+	Added check so that in all of the scripts, when they are fed with
+	something that doesn't look like a filename, it will produce a warning
+	rather than trying to open the string and possibly getting all sorts
+	of garbage on your file-system.
+
+	Fixed double escaping problem in NexTrieve.pm introduced earlier today.
+
+	Fixed test-suite problems in t/12html.t, t/13rfc822.t, t/14mbox.t and
+	t/71mbox.t that would occur if the Date::Parse module is not installed.
+
+	Fixed one more infinite loop problem in RFC822.pm when attempting to
+	decode faulty formed attachments.
+
+	Added new test-suite script t/71mbox.t for checking whether mails that
+	are known to produce problems in older versions, continue to be handled
+	correctly.  Now 4 problem mails are in there: each test consists of
+	a sample mailbox (extension .mbox in the t directory) with a dummy
+	message preceding and following the actual message with a problem, as
+	well as a file with the expected stdout output (extension .stdout) as
+	well as a file with the expected stderr output (extension .stderr).
+	Adapted the MANIFEST accordingly.  Currently 3 tests are being done
+	for each file: exit status, match on stdout output and match on stderr
+	output.
+
+0.10	11 February 2002
+	Adapted HTML.pm to use the "_hashprocextra" method of NexTrieve.pm.
+	This simplified the "Document" method significantly.
+
+	Fixed warning message in NexTrieve::_iconv: if iconv failed to do
+	a conversion, don't bother trying to open the output file.
+
+	Implemented the content hash concept of HTML.pm into RFC822.pm as
+	well.  This allows the "id" attribute to get another name and to
+	be missing from the XML at all if necessary.  It also allows processing
+	routines to be assigned to the "id" attribute as well as for the
+	text (the '' empty attribute).  Fixes problem in method "Resource"
+	which did not include the "id" attribute and was therefore out of
+	sync with the XML that was generated.  Adapted the test-suite: some
+	order of the containers was changed as well as some whitespace
+	differences.  Now also honours the "skip" method for skipping a
+	Document when so indicated inside a processing routine.
+
+	Moved (yet again) a lot of the intelligence of HTML.pm to NexTrieve.pm
+	in the "_hashprocextra" method, so that it can be used by both HTML.pm
+	and RFC822.pm and any other modules in the future (e.g. PDF.pm).
+	Adapted _add_container and _process_container to handle list references
+	(as used by RFC822.pm).
+
+	Changed all scripts in the "script" directory to use
+	"ShowErrorsAsWarnings" rather than "DieOnError".  This should cause
+	the filters to continue even when there is a (simple) error such as
+	an attachment decoding error.  Probably need something that allows
+	for finer tuning in the future.
+
+	Fixed problem in _process_parts of RFC822.pm that would cause an
+	infinite loop on faulty recursive attachments.
+
+	Changed "ResourceFromIndex" in Index.pm to handle garbage output in
+	older ntvopt's and no output in future ntvopt's.
+
+	10 February 2002
+	Wrapped "_iconv" conversion in an eval to prevent it from bombing Perl.
+
+	Added support for empty-tag processing routine for the rest HTML to be
+	processed and skip flag support to HTML.pm.  This should now allow a
+	processing routine to process the HTML before creating the final XML
+	and to have any processing routine mark the document to be skipped
+	(e.g. after an MD5 check on the HTML reveals that there is already
+	a page with the same contents).
+
+	Added method "skip" to NexTrieve.pm as a generic way for processor
+	routines to indicate that the result of the processing should be
+	skipped.
+
+	Added support for no-name containers to _process_container and
+	_add_container in NexTrieve.pm.
+
+	9 February 2002
+	Added mask parameter to mkdir in t/80ntvindex.t and Index.pm: apparently
+	older versions of Perl 5 do not allow single argument mkdir().
+
+	Added some heuristics to _normalize_encoding of NexTrieve.pm to allow		for broken encoding names such as "latin-1". Added test for this in
+	t/08docseq.t.
+
+0.09	8 February 2002
+	Added methods "update_start" and "update_end" to Index.pm: this now
+	handles the creation of new versions of an index by first creating
+	a "indexdir.new" directory, adapting the Index object to have it index
+	in that directory, then when done indexing, move the current indexdir
+	to indexdir.old and moving indexdir.new to indexdir.  Also copies
+	files in case of an incremental update.  Still allows whatever way
+	you want for indexing.  Removed the "Issue" idea from the TODO.
+
+	Added method "mkdir" to Index.pm to create the indexdir directory.
+
+	Changed class method "executable" in NexTrieve.pm to return the
+	program name as the first parameter instead of a flag, which is much
+	more handy.  Adapted internal _command_log method to this
+	functionality as well as the ResourceFromIndex method in Index.pm.
+
+	Added method "restart" to Daemon.pm.  Method "stop" now removes the
+	pid information from the object.  Added test for this to
+	t/83ntvsearchd.t.
+
+	Made "stream" method of Docseq.pm default to STDOUT.  Changed all the
+	scripts in the script directory to use that new feature.
+
+	Added check for extra attributes and texttypes to t/12html.t.
+
+	Final fix to ampersand: limit character number check to 3 digits
+	maximum to prevent overflow if number > 64K.
+
+0.08	7 February 2002
+	Another fix to ampersand: now properly converts to &#160; instead of
+	&160;.
+
+	Made some of the XML creation less Perl version dependent by sorting
+	the keys in hashes where appropriate.  Did the same with HTML.pm.
+	Fixes make test problems on older Perl versions but we probably should
+	find another way around this.
+
+	Fixed problem with -t parameter in "html2ntvml" script: was still
+	referencing the now non-existent "titlemax" method.  Added an
+	attribute processor routine to fix the problem.
+
+	Fixed some documentation omissions in README and NexTrieve.pm pod.
+
+	6 February 2002
+	Fixed small problem in ampersand that would cause faulty entities such
+	as "word&#160other word" to not convert to "word&160;other word".
+
+	Added "optimize" method to Index.pm.  Added extra test-suite script
+	t/83ntvopt.t for checking ntvopt.  NexTrieve::Index->executable now
+	allows filename parameter to check specific executablity of 'ntvopt'
+	or 'ntvidx-useopt.sh'.
+
+	Removed 2>/dev/null from the integrity check in NexTrieve.pm: we want
+	to know if something goes wrong.
+
+0.07	6 February 2002
+	Added ResourceFromIndex method to Index.pm to create a Resource
+	object from an existing indexdir.
+
+	Added <A> as a default display container to NexTrieve.pm.
+
+	Added preprocessor concept to HTML.pm.  Added "mhonarc" method that
+	sets up attributes, texttypes and processors for handling HTML-files
+	as generated by MHonArc.  Added test-suite for MHonArc functionality.
+
+	Adapted test-suite for newer NexTrieve installations so that no -v
+	output from ntvindex is handled correctly.
+
+	Finished initial reconstruction of HTML.pm.  Moved some more stuff from
+	RFC822.pm to NexTrieve.pm so that it can be used by HTML.pm as well.
+	Added "htmlsimple" method to HTML.pm so that you get the same behaviour
+	as before.  Adapted script "html2ntvml" so that it used this
+	"htmlsimple" method to create same functionality.
+
+	5 February 2002
+	Continued work on HTML.pm.  Removed "titlemax" method, as that should
+	now be handled by an attribute processing routine.  Removed "key"
+	parameter from the API of processing routines: it did not make much
+	sense for RFC822 processing, it made even less sense for HTML
+	processing.
+
+	4 February 2002
+	Started work on HTML.pm to allow for extra attributes and texttypes,
+	and to have processor routines on attributes and texttypes.  Changed
+	name of <filename> container to <id>, as that is more general.  Method
+	"Document" also allows reference to list with ID and html to be passed
+	if both are in memory already.
+
+	Made checks on external modules Digest::MD5, Date::Parse and IO::Socket
+	the same: if they are already loaded when NexTrieve.pm is loaded, then
+	they will be activated immediately.  Otherwise, they will be activated
+	on demand.  This should give maximum flexibility (e.g. for a pre-
+	loading mod_perl environment) and minimum bloat (in on-demand
+	environments such as scripts).
+
+	Moved significant part of RFC822.pm intelligence to NexTrieve.pm, so
+	that it can also be inherited by HTML.pm and other modules in the
+	future.
+
+	3 February 2002
+	Changed RFC822.pm so that empty containers are not returned at all.
+
+0.06	2 February 2002
+	Messed up an upload to CPAN, now it won't let me upload 0.05 again
+	properly, so bumped up the version to 0.06.
+
+0.05	2 February 2002
+	Removed some debug crud from several tests.
+
+	Support for HTML in RFC822.pm now completed: if the message contains
+	HTML and not associated text, then the HTML will be stripped of its
+	containers and added as text.  Added two more message with HTML checks
+	to the test-suite.
+
+	Removed 2>/dev/null from Index.pm and Daemon.pm so that any error
+	messages from NexTrieve will not be lost.  Changed test-suite so that
+	when NexTrieve is installed, but a license can not be found, the tests
+	exit gracefully allowing an automatic install from CPAN in that case.
+
+	Create an "executable" class method in NexTrieve.pm.  Changed the
+	"executable" class methods in Index.pm, Search.pm and Daemon.pm to use
+	this class method.  Now also returns software and index version
+	information.  Should also return license information in the future
+	when NexTrieve will also return that on a -V.  However, this still
+	doesn't solve the test-suite errors if NexTrieve is installed but the
+	license cannot be found or is out of date.
+
+	1 February 2002
+	Started implementation of the MIME-processor concept in RFC822.pm, that
+	should allow external processors for specific MIME-types to be
+	specified.  Add text/plain and text/x-diff handlers.
+
+	Moved "displaycontainers" and "removecontainers" functionality from
+	HTML.pm to NexTrieve.pm, so that it can be inherited by RFC822.pm.
+
+	Changed the "scripts" directory to "script" and added it as "EXE_FILES"
+	in the Makefile.PL specification.  The scripts "docseq",
+	"mailbox2ntvml" and "html2ntvml" are now automatically installed in
+	/usr/local/bin if a "make install" is done.
+
+	Fixed problem in NexTrieve.pm that would cause test-suite errors if
+	Text::Iconv was not installed and the Unix "iconv" utility _was_
+	available.
+
+	Added "docseq" script to quickly create a document sequence out of a
+	bunch of files that were created by another process.  Added test for
+	the script functionality.
+
+	Added "files" method to Docseq.pm, to allow for quick merging of pre-
+	created NTVML-files into a Docseq.  Added a special case "read_string"
+	to Document.pm so that encoding is removedi from read-made XML and
+	added to the object so that $docseq->files can do its work without
+	having to create a DOM.  Added test for this functionality.
+
+0.04	1 February 2002
+	Fixed last nit in RFC822.pm which was exposed while testing the
+	mailbox2ntvml script.
+
+	30 January 2002
+	Ported the NexTrieve standard script "ntvmailbox2ntvml" to use the
+	new NexTrieve::Mbox module and added it as "mailbox2ntvml" in the
+	scripts directory.
+
+	Completed first version of the NexTrieve::Mbox module + associated
+	test-suite.  You can now easily index one or more standard Unix
+	mailboxes and have filename, offset and length attributes added
+	automagically.  In concept based on the ntvmailbox2ntvml script in
+	the NexTrieve distribution.
+
+	Added general purpose method "ampersandize" to NexTrieve.pm, as a
+	subset of what "normalize" does.  Changed normalization method of
+	RFC822 from "normalize" to "ampersandize".
+
+	Added Resource method to NexTrieve::RFC822 module.  Creates a Resource
+	object with <indexcreation> section that corresponds to the XML that
+	is generated by Document.
+
+	Changed NexTrieve.pm so that empty containers are always written out
+	in alphabetical order.  This should make the XML more predictable
+	(as hashes do not have same order in different versions of Perl).
+	Adapted t/03resource.t to now check again for predictable XML.
+
+	Inheritable method "xml" now warns the XML if called in a void context
+	without any parameters.  That mode of operation is intended as a
+	debugging tool.
+
+	Added Resource method to NexTrieve::HTML.  Removed the attributes and
+	texttypes methods in favour if that.  Added test to t/12html.t to check
+	whether it works.
+
+	29 January 2002
+	Completed first version of NexTrieve::RFC822 module.  Added support for
+	extra attributes and texttypes from external sources.  Added examples
+	using this in the test-suite.  Internally generalized a lot of stuff,
+	resulting in less source code at the expense of a little CPU overhead.
+
+	Added 'epoch' as a keyed processing routine.
+
+	28 January 2002
+	Nearing completion on the NexTrieve::RFC822 module.  Removed the special
+	"date" type and replaced that by a more generic processing routine
+	concept.  Re-created the date processing as a standard processing
+	routine named "datestamp", added "timestamp" as an alternate processing
+	routine that creates timestamp in the form YYYYMMDDHHMMSS.
+
+	27 January 2002
+	Removed test for NexTrievePath from t/01basic.t: it was causing false
+	failures on platforms where NexTrieve is not installed.
+
+	Moved functionality of NexTrieve::HTML->Docseq method to the
+	NexTrieve.pm module: now any module that inherits from the NexTrieve.pm
+	only needs to supply a Document() method to be able to create many
+	NexTrieve::Documents from any data source.
+
+	Added support for Text::Iconv to recoding functions of NexTrieve.pm.
+
+	Fixed problem in NexTrieve::HTML: removecontainers would only remove
+	<script> even if other containers were specified.
+
+	Started work on the NexTrieve::RFC822 module.
+
+	Removed debug nit from NexTrieve::HTML->Docseq that would actually
+	cause the HTML-file to be converted twice.
+
 0.03	26 January 2002
 	Adapted NexTrieve's "ntvhtml2ntvml" filter for use with the NexTrieve
 	module and added as a script named "html2ntvml" and added test of

@@ -9,7 +9,7 @@ use NexTrieve qw(Querylog);
 $loaded = 1;
 ok( 1 );
 
-my $ntv = NexTrieve->new( {DieOnError => 1} );
+my $ntv = NexTrieve->new( {RaiseError => 1} );
 my $version = $ntv->version;
 
 # 02 Create empty querylog object
@@ -53,9 +53,6 @@ EOD
 
 my $handle = $ntv->openfile( $filename,'>' );
 print $handle $logfile; close( $handle );
-
-use Carp ();
-$SIG{__DIE__} = \&Carp::confess;
 
 # 03 create querylog object from file
 $querylog = $ntv->Querylog( $filename );

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<mailbox>t/cisco.mbox</mailbox>
+<offset>0</offset>
+<length>66</length>
+<from>me</from>
+<subject>before subject</subject>
+</attributes>
+<text>
+<subject>before subject</subject>
+before message
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/cisco.mbox</mailbox>
+<offset>66</offset>
+<length>286</length>
+<date>19981022</date>
+<from>me</from>
+<subject>subjecto</subject>
+</attributes>
+<text>
+<subject>subjecto</subject>
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/cisco.mbox</mailbox>
+<offset>352</offset>
+<length>940</length>
+<date>19981014</date>
+<from>someone</from>
+<subject>other subjecto</subject>
+</attributes>
+<text>
+<subject>other subjecto</subject>
+Secure Computing Customer Support Bulletin
+October, 1998
+
+What
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/cisco.mbox</mailbox>
+<offset>1292</offset>
+<length>64</length>
+<from>me</from>
+<subject>after subject</subject>
+</attributes>
+<text>
+<subject>after subject</subject>
+after message
+</text>
+</document>
+</ntv:docseq>

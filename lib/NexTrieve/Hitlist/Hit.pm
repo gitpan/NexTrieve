@@ -6,7 +6,7 @@ package NexTrieve::Hitlist::Hit;
 
 use strict;
 @NexTrieve::Hitlist::Hit::ISA = qw(NexTrieve); # nothing from NexTrieve::Hitlist
-$NexTrieve::Hitlist::Hit::VERSION = '0.03';
+$NexTrieve::Hitlist::Hit::VERSION = '0.29';
 
 # Return true value for use
 
@@ -112,7 +112,11 @@ NexTrieve::Hitlist::Hit - handle the Hit specifications of NexTrieve
 =head1 DESCRIPTION
 
 The Hit object of the Perl support for NexTrieve.  Do not create
-directly, but through the Hit method of the NexTrieve::Hitlist object.
+directly, but through the Hit(s) method of the NexTrieve::Hitlist object.
+
+Please note that the NexTrieve::Hitlist::Hit object is actually part of the
+NexTrieve::Hitlist object and can therefore only be created through any module
+that creates a NexTrieve::Hitlist object (such as the NexTrieve::Search module).
 
 =head1 METHODS
 
@@ -123,36 +127,73 @@ The following methods are available to the NexTrieve::Hitlist::Hit object.
  @multi = $hit->attributes( 'multivaluedattributename' );
 
  $single = $hit->attributes( 'singlevaluedattributename' );
-
  ($one,$two,$three) = $hit->attributes( qw(attr1 attr2 attr3) );
 
  $hit->attributes( qw(attr1 attr2) ); # set @attr1, $attr1, @attr2 $attr2
+
+The "attributes" method is a versatile method that returns the attribute
+information of one or more attributes.
+
+If an attribute is multi-valued (i.e. it has a multiplicity of "*" in the
+NexTrieve resource file), then all the values of one such attribute can be
+returned at a time.  In that case, the one and only input parameter is the
+name of the attribute.
+
+If the attributes in question, are single-valued (i.e. have a multiplicity of
+"1" in the NexTrieve Resource file), then there are basically two modes of
+operation.  In the first of those modes, you simply specify the name(s) of the
+attribute(s) of which you want to obtain the values.  They are then returned
+in the same order as with which the names are specified.
+
+In the other of these modes, the "attributes" method is called in void
+context.  It then sets the global variables and lists with the same name
+as the name of the attribute in the namespace of the calling subroutine.  This
+can be particularly handy in templating situations, where you want to quickly
+access the result of a search query without being particularly interested in
+the efficiency of execution.
 
 =head2 docid
 
  $docid = $hit->docid;
 
+The "docid" method returns the docid number of the document for which the
+hit is returned in the hitlist.  It is an arbitrary number uniquely identifying
+the document in the NexTrieve index.
+
 =head2 ordinal
 
  $ordinal = $hit->ordinal;
+
+The "ordinal" method returns the ordinal number of the hit in the conceptual
+hitlist that was returned.  Its value is between the values returned by the
+"firsthit" and "lasthit" methods of the NexTrieve::Hitlist object inclusive.
 
 =head2 preview
 
  $preview = $hit->preview;
 
+The "preview" method returns the preview that is associated with this
+particular hit.  It is an XML string that may contain <B>...</B> containers
+for highlighted words.
+
 =head2 score
 
  $score = $hit->score;
 
+The "score" method returns the score that is associated with this particular
+hit.  It is a numeric value that has no meaning by itself but only in relation
+to other values in the hitlist.  The value of the score determines the order
+of the hits in the hitlist.
+
 =head1 AUTHOR
 
-Elizabeth Mattijsen, <liz@nextrieve.com>.
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
-Please report bugs to <perlbugs@nextrieve.com>.
+Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

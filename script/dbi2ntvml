@@ -1,0 +1,240 @@
+#!/usr/bin/perl -w
+
+#-------------------------------------------------------------------------
+
+# Make sure we pre-declare everything
+# Check if we have the DBI module
+
+use strict;
+eval( 'use DBI;' );
+die "Cannot load DBI module: $@" unless defined($DBI::VERSION);
+
+# Use the necessary Perl modules
+
+use NexTrieve qw(DBI);
+
+# Output warning if it is the wrong version
+
+warn <<EOD if $NexTrieve::VERSION ne '0.29';
+$0 is not using the right version of the associated Perl modules.
+Operation of this script may be in error because of this.
+EOD
+
+# Create a NexTrieve object
+
+my $ntv = NexTrieve->new( {PrintError => 1} );
+
+# If there are no arguments specified whatsoever and no files specified in pipe
+#  Make sure we can execute external programs
+#  Show the POD documentation
+#  And exit
+
+if (!@ARGV and -t STDIN) {
+  $ntv->untaint( $ENV{'PATH'} );
+  exec( 'perldoc',$0 );
+  exit;
+}
+
+# Initialize stuff
+
+my %datetype = ();
+my %attrtype = ();
+my %texttype = ();
+my $bare = '';
+my $connect = '';
+my $defaultencoding = 'iso-8859-1';
+my $id = 'id';
+my $nopi = '';
+my $password;
+my $select = '';
+my $text = 'text';
+my $user;
+my $flag;
+
+# For all of the parameters
+#  If it is a (new) flag
+#   Obtain the flag
+#   If forcing bare XML, set flag and reset the global flag
+#   If forcing nopi, set flag and reset the global flag
+#   Reloop
+#  Warn user if parameter without known flag and exit
+
+foreach (@ARGV) {
+  if (m#^-(\w)#) {
+    $flag = $1;
+    $bare = 1, $flag = '' if $flag eq 'b';
+    $nopi = 1, $flag = '' if $flag eq 'n';
+    next;
+  }
+  warn "Must specify type of parameter first\n",exit unless $flag;
+
+#  Make whatever we got lowercase
+#  Set ordinary attribute if so indicated
+#  Set date attribute if so indicated
+#  Set texttype if so indicated
+  
+  $_ = lc($_);
+  $attrtype{$_}++ if $flag eq 'a';
+  $datetype{$_}++ if $flag eq 'd';
+  $texttype{$_}++ if $flag eq 't';
+
+# If an encoding is specified
+#  Obtain that encoding
+# Elseif we have an "id" specification
+#  Obtain the specification
+# Elseif we have an "text" specification
+#  Obtain the specification
+
+  if ($flag eq 'E') {
+    $defaultencoding = $_; $flag = '';
+  } elsif ($flag eq 'i') {
+    $id = $_; $flag = '';
+  } elsif ($flag eq 'e') {
+    $text = $_; $flag = '';
+
+# Elseif we have a "connectstring" specification
+#  Obtain the specification
+# Elseif we have a "user" specification
+#  Obtain the specification
+# Elseif we have a "password" specification
+#  Obtain the specification
+# Elseif we have a "select" specification
+#  Obtain the specification
+
+  } elsif ($flag eq 'c') {
+    $connect = $_; $flag = '';
+  } elsif ($flag eq 'u') {
+    $user = $_; $flag = '';
+  } elsif ($flag eq 'p') {
+    $password = $_; $flag = '';
+  } elsif ($flag eq 's') {
+    $select = $_; $flag = '';
+  }
+}
+
+# Initialize error
+# Add error if no connect string
+# Add error if no user name specified and no terminal connected
+# Add error if no select statement
+
+my $error = '';
+$error .= "Must have a connect-string specified\n" unless $connect;
+$error .= "Must have a user name specified\n" unless $user or -t;
+$error .= "Must have a SELECT statement specified\n" unless $select;
+
+# If no attributes and no texttypes
+#  Add error
+# Die now if there were errors
+
+if (!keys %datetype and !keys %attrtype and !keys %texttype) {
+  $error .= "No attributes or texttypes specified\n";
+}
+die $error if $error;
+
+# If we don't have a user name yet and we have a user to ask
+#  Obtain the user name
+
+if (!defined($user) and -t) {
+  print STDERR "Enter user > ";
+  chomp( $user = <STDIN> );
+}
+
+# If we don't have a password yet and we have a user to ask
+#  Obtain the password
+
+if (!defined($password) and -t) {
+  print STDERR "Enter password > ";
+  chomp( $password = <STDIN> );
+}
+
+# Attempt to make connection to database
+# Die now if failed
+
+my $dbh = DBI->connect( $connect,$user,$password );
+die "Error making connection: $DBI::errstr\n" unless defined($dbh);
+
+my $sth = $dbh->prepare( $select ) ||
+ die "Error preparing SELECT: $DBI::errstr\n";
+$sth->execute || die "Error executing SELECT: $DBI::errstr\n";
+
+# Set the default encoding if any specified
+# Create the DBI object with the right settings
+
+$ntv->DefaultInputEncoding( $defaultencoding ) if $defaultencoding;
+my $dbi = $ntv->DBI( {
+ attribute_processor	=> [map {[$_,'datetimestamp']} keys %datetype],
+ field2attribute	=> [keys %datetype,keys %attrtype],
+ field2texttype		=> [keys %texttype],
+ id			=> $id,
+ text			=> $text,
+} );
+
+# Create the docseq object
+# Set the bare XML flag if so specified
+# Set the no processor instruction flag if so specified
+# Make sure we'll be streaming to STDOUT to reduce memory requirements
+# Do the conversion and finish up the stream
+
+my $docseq = $ntv->Docseq;
+$docseq->bare( $bare ) if $bare;
+$docseq->nopi( $nopi ) if $nopi;
+$docseq->stream;
+$dbi->Docseq( $docseq,$sth )->done;
+
+#-------------------------------------------------------------------------
+
+__END__
+
+=head1 dbi2ntvml
+
+Basic DBI to XML converter for use with NexTrieve.
+
+=head2 Usage
+
+ dbi2ntvml [-i id] [-e text] [-d date] [-a title] [-t title] [-E defaulinputencoding] [-n] [-b] -c connectstring [-u user] [-p password] -s select
+
+=head2 Parameters
+
+ -i field to use as "id" (default: "id")
+ -e field to use as "text" (default: "text")
+ -d following parameters should be considered as date attributes
+ -a following parameters should be considered as standard attributes
+ -t following parameters should be considered as text-types
+
+ -c connectstring to connect to database
+ -u user to access the database (ask user if not specified)
+ -p password (ask user if not specified)
+ -s SELECT statement to be used
+
+ -E specify encoding to assume
+ -n do not output <?xml..?> processor instruction
+ -b do not output <ntv:docseq> container (bare XML)
+
+=head2 Example
+
+ dbi2ntvml -a id title -t title \
+  -c 'DBI:mysql:database=test;host=localhost' -u 'test' -p '' \
+  -s 'SELECT ID as id,title,taxt as text FROM table'
+
+Create NTVML from selecting records from the table "table" in the database
+"test", using the MySQL server running on the localhost with user name 'test'
+and an empty password.  Create NTVML with "id" and "title" as attribute, and
+"title" as text-type as well.  Use the default field names for "id" and "text".
+
+=head1 AUTHOR
+
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
+
+Please report bugs to <perlbugs@dijkmat.nl>.
+
+=head1 COPYRIGHT
+
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+reserved.  This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+http://www.nextrieve.com and the NexTrieve::xxx modules.
+
+=cut

@@ -6,7 +6,7 @@ package NexTrieve::Query;
 
 use strict;
 @NexTrieve::Query::ISA = qw(NexTrieve);
-$NexTrieve::Query::VERSION = '0.03';
+$NexTrieve::Query::VERSION = '0.29';
 
 # Initialize the list of texttype keys
 
@@ -372,7 +372,6 @@ EOD
 
 #------------------------------------------------------------------------
 
-1;
 __END__
 
 =head1 NAME
@@ -390,94 +389,253 @@ NexTrieve::Query - handle the Query specifications of NexTrieve
 The Query object of the Perl support for NexTrieve.  Do not create
 directly, but through the Query method of the NexTrieve object.
 
+
 =head1 METHODS
 
 The following methods are available to the NexTrieve::Query object.
 
+Please note that all methods described here are directly related to the
+Query XML as described on
+http://www.nextrieve.com/usermanual/2.0.0/ntvqueryxml.stm .  Any new feautures
+of NexTrieve should probably be supported by these methods, as no filtering
+is taking place before the Query XML is generated.
+
 =head2 constraint
 
- $query->constraint( 'attr1 = 1 &amp; attr2 = 2' );
+ $query->ampersandize( $constraint = 'attr1 = 1 & attr2 = 2' );
+ $query->constraint( $constraint );
  $constraint = $query->constraint;
+
+The "constraint" method allows you to specify the constraint that should be
+applied to the list of documents that is going to be searched.  A full list
+of constraint capabilities can be found on
+http://www.nextrieve.com/usermanual/2.0.0/ntvqueryxml.stm .  Please make sure
+that the constraint is valid XML, most notably by making sure that '&' is
+expressed as '&amp;' and '<' is expressed as '&lt;'.  This can be achieved
+by converting the query with the L<ampersandize> method that is inherited
 
 =head2 displayedhits
 
  $query->displayedhits( number );
  $displayedhits = $query->displayedhits;
 
+The "displayedhits" method sets the maximum number of hits that you want to
+have returned to you.  It is an alternate way of using the L<lasthit> method.
+If neither the L<lasthit> or the "displayedhits" method is called on the
+object, the number of hits to be returned is determined by what was specified
+by the L<totalhits> method.
+
 =head2 firsthit
 
  $query->firsthit( ordinal );
  $firsthit = $query->firsthit;
+
+The "firsthit" method allows you to specify the ordinal number of the first
+hit that you want returned.  This is particularly useful when "paging" through
+a result list.  Either call the L<lasthit> method to specify the ordinal
+number of the last hit you want returned, or the L<displayedhits> method to
+specify the maximum number of hits you want returned.
+
+The value "1" is assumed if the L<firsthit> method is never called.
 
 =head2 fuzzylevel
 
  $query->fuzzylevel( 0 | 1 | 2 | 3 );
  $fuzzylevel = $query->fuzzylevel;
 
+The "fuzzylevel" method allows you to specify the fuzzyness of the search that
+should be used.  It is only applicable if the value "fuzzy" was specified
+with a call to method L<type>.
+
+Currently only the values 0, 1, 2 and 3 are allowed.  By default, a value of
+"1" is assumed if the "fuzzylevel" method is never called.
+
 =head2 highlightlength
 
  $query->highlightlength( 0 | number );
  $highlightlength = $query->highlightlength;
+
+The "highlightlength" method allows you to specify the number of characters
+that should be in a word to have the word highlighted in the preview of a hit.
+It is only applicable if the value "fuzzy" was specified with a call to method
+L<type>.
+
+The value "0" indicates an automatic length determination that uses the length
+of the words specified in the L<query>, L<qany>, L<qall> and L<qnot> methods.
+
+The value "3" is assumed if the "highlightlength" method is never called.
 
 =head2 id
 
  $query->id( id );
  $id = $query->id;
 
+The "id" method is of little use with the Perl modules: it is used by the
+NexTrieve server to identify queries with results that are offered to the
+server using a persistent connection.  Since the Perl modules always break
+the connection after receiving a result, there is not much point in using
+this feature.
+
+The input parameter specifies a string that uniquely identifies this query.
+If specified, the same string will be returned by the "id" method of the
+NexTrieve::Hitlist object.
+
 =head2 indexname
 
  $query->indexname( mnemonic );
  $indexname = $query->indexname;
+
+The "indexname" method is only applicable when using a Caching Query Server,
+as described on http://www.nextrieve.com/usermanual/2.0.0/ntvcached.stm .
+
+The "indexname" method specifies the name of the logical index that should be
+used for this query.  No logical index will be assumed if this method is never
+called.
 
 =head2 lasthit
 
  $query->lasthit( $ordinal );
  $lasthit -> $query->lasthit;
 
+The "lasthit" method specifies the ordinal number of the last hit that you
+want to have returned.  As such, it is an alternative way for using the
+L<displayedhits> method.  The ordinal number of the last possible hit, as
+specified with a call to the L<totalhits> method, will be assumed if this
+method is never called.
+
 =head2 qall
 
  $query->qall( qw(all of these words must occur) );
  $qall = $query->qall;
+
+The "qall" method specifies a list of words that should B<all> occur in a
+hit.  It is an alternative way to specifying words using the "+" prefix in
+the L<query> method.
 
 =head2 qany
 
  $query->qany( qw(all of these words may occur) );
  $qany = $query->qany;
 
+The "qany" method specifies a list of words that may or may not occur in a
+hit.  It is an alternative way to specifying words without any prefix in
+the L<query> method.
+
 =head2 qnot
 
  $query->qnot( qw(none of these words may occur) );
  $qnot = $query->qnot;
+
+The "qnot" method specifies a list of words that should B<not> occur in a
+hit.  It is an alternative way to specifying words using the "-" prefix in
+the L<query> method.
 
 =head2 query
 
  $query->query( qw(+must may -maynot) );
  $queryspec = $query->query;
 
+The "query" method specifies the query for which a hitlist should be returned.
+It can consist of just a bunch of words.  If an exact search is specified with
+the L<type> method, then the words can be prefixed with:
+
+ "+" to indicate a word that B<must> occur in a document
+
+ "-" to indicate a word that must B<not> occur in a document
+
+The "query" method is an alternative to calling the L<qall>, L<qany> or
+L<qnot> methods.
+
 =head2 showattributes
 
  $query->showattributes( true | false );
  $showattributes = $query->showattributes;
+
+The "showattributes" method allows you to specify whether you want the
+attributes associated with a document, to be returned with the hit.  By
+default attributes are returned with the hit and can be obtained by the
+"attributes" method of the NexTrieve::Hitlist::Hit object.
+
+Please note that in the future it may become possible to indicate specific
+attributes to be returned, which will change the meaning of the input
+parameters.  It is therefore recommended to only use the values "0" and "1"
+as parameters to this method, so that future versions of this method can
+remain compatible.
 
 =head2 showpreviews
 
  $query->showpreviews( true | false );
  $showpreviews = $query->showpreviews;
 
+The "showpreviews" method allows you to specify whether you want a preview of
+the text where the hit was found in a document, to be returned with the hit.
+By default the preview is returned with the hit and can be obtained by the
+"preview" method of the NexTrieve::Hitlist::Hit object.
+
+=head2 texttype
+
+ $query->texttype( name,weight );
+ ($weight) = $query->texttype( name );
+
+The "texttype" method specifies the weight that should be applied to text
+found in the given text type name.
+
+The first input parameter specifies the "name" of the texttype.
+
+The second input parameter specifies the "weight" of the texttype that should
+be used in the query.  A default of "100" will be assumed if no weight is
+specified.
+
+=head2 texttypes
+
+ $resource->texttypes( [name1,weight1], [name2..] .. [nameN..] );
+ @texttype = $resource->texttypes;
+
+The "texttypes" method allows you to weight ot B<all> texttypes that have
+to have a weight different from the default weight of "100".  Each input
+parameter specifies the specifics of one texttype as a reference to a list
+in which the parameters have the same order as the L<texttype> method.
+
+=head2 totalhits
+
+ $query->totalhits( number );
+ $totalhits = $query->totalhits;
+
+The "totalhits" method specifies how many hits should initially be considered
+for inclusion in the hitlist.  A default of "1000" is assumed if this method
+is never called.
+
+The actual number of hits returned is determined by the L<firsthit> and
+L<displayedhits> or L<lasthit> method.
+
 =head2 type
 
  $query->type( exact | fuzzy );
  $type = $query->type;
 
+The "type" method indicates which type of search should be performed.  By
+default a "fuzzy" search will be performed if this method is never called.
+Currently, there are two values that can be specified:
+
+- exact 
+
+Each word should occur exactly as specified in the document.
+
+- fuzzy
+
+A context sensitive pattern algorithm is used to search for hits.  Words do
+not need to be spelled exactly, but exactly spelled words are favoured over
+misspelt words.
+
 =head1 AUTHOR
 
-Elizabeth Mattijsen, <liz@nextrieve.com>.
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
-Please report bugs to <perlbugs@nextrieve.com>.
+Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

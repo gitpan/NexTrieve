@@ -1,25 +1,24 @@
 use Test;
-BEGIN { plan tests => 14 }
+BEGIN { plan tests => 15 }
 END {
   ok(0) unless $loaded;
-  unlink( $filename ) if -e $filename;
+  unlink( $filename ) if defined($filename) and -e $filename;
 }
 
 use NexTrieve qw(Resource);
 $loaded = 1;
 ok( 1 );
 
-my $ntv = NexTrieve->new( {DieOnError => 1} );
+my $ntv = NexTrieve->new( {RaiseError => 1} );
 my $version = $ntv->version;
 
 # 02 Create empty resource file, check version
 my $resource = $ntv->Resource;
 ok( $resource->version,undef );
 
-# 03 Check if encoding can be set and returned
-my $encoding = 'iso-8859-1';
-$resource->encoding( $encoding );
-ok( $resource->encoding,$encoding );
+# 03 Check if broken encoding can be set and returned
+$resource->encoding( 'latin-1' );
+ok( $resource->encoding,'iso-8859-1' );
 
 # 04 Obtain XML, version should now be set
 my $xml = $resource->xml;
@@ -35,25 +34,26 @@ EOD
 # 06 Check if reading XML produces identical XML
 $xml =
  qq(<ntv:resource xmlns:ntv="http://www.nextrieve.com/$version"></ntv:resource>);
-$resource = $ntv->Resource( $xml );
-ok( $resource->xml,$xml );
+$resource = $ntv->Resource( $xml,'' );
+$resource->xml unless ok( $resource->xml,$xml );
 
 # 07 Check if simple value setting and returning works
-my $basedir = '/home/user/nextrieve';
-$resource->basedir( $basedir );
-ok( $resource->basedir,$basedir );
+my $indexdir = '/home/user/nextrieve/index';
+$resource->indexdir( $indexdir );
+ok( $resource->indexdir,$indexdir );
 
 # 08 Check if XML is correctly generated with given value
 $xml = <<EOD;
+<?xml version="1.0" encoding="iso-8859-1"?>
 <ntv:resource xmlns:ntv="http://www.nextrieve.com/$version">
-<basedir name="$basedir"/>
+<indexdir name="$indexdir"/>
 </ntv:resource>
 EOD
-ok($resource->xml,$xml);
+$resource->xml unless ok($resource->xml,$xml);
 
 # 09 Check if creation with method specification works ok
-$resource = $ntv->Resource( {basedir => $basedir} );
-ok($resource->xml,$xml);
+$resource = $ntv->Resource( {indexdir => $indexdir} );
+$resource->xml unless ok($resource->xml,$xml);
 
 # 10 Check if we can create a file
 $filename = "$0.xml";
@@ -63,11 +63,11 @@ ok(-e $filename);
 
 # 11 Check if we can read the file that was just created and has the same result
 $resource->read_file( $filename );
-ok($resource->xml,$xml);
+$resource->xml unless ok($resource->xml,$xml);
 
 # 12 Check if we can create a new object with the just created file
-$resource = $ntv->Resource( $filename );
-ok($resource->xml,$xml);
+$resource = $ntv->Resource( $filename,'filename' );
+$resource->xml unless ok($resource->xml,$xml);
 
 # 13 Check if can be used to update existing resource file
 unlink( $filename );
@@ -75,10 +75,9 @@ $resource->write_file;
 ok(-e $filename);
 
 # 14 Check if we can create a new object with a set of method specifications
-my $indexdir = "$basedir/index";
+(my $querylog = $indexdir) =~ s#/index$#/queries#;
 $resource = $ntv->Resource( {
 
- basedir        => $basedir,
  cache          => '10M',
  indexdir       => $indexdir,
  licensefile    => '',
@@ -114,8 +113,46 @@ $resource = $ntv->Resource( {
 
 # searching section
  highlight      => 'b',
- querylog       => "$basedir/queries",
+ querylog       => $querylog,
  threads        => [50,100,5],
 } );
 
 ok(!$resource->Errors);
+
+# 15 check if the XML comes out alright
+$resource->xml unless ok($resource->xml,<<EOD);
+<?xml version="1.0" encoding="iso-8859-1"?>
+<ntv:resource xmlns:ntv="http://www.nextrieve.com/1.0">
+<cache size="10M"/>
+<indexdir name="/home/user/nextrieve/index"/>
+<logfile name="/home/user/nextrieve/index/index.log"/>
+<indexcreation>
+<attribute name="flag1" type="flag"/>
+<attribute name="flag2"/>
+<attribute name="flag3"/>
+<attribute name="multi1" type="string" key="key-duplicates"/>
+<attribute name="multi2"/>
+<attribute name="multi3"/>
+<attribute name="multi4"/>
+<attribute name="number1" type="number" key="notkey"/>
+<attribute name="number2"/>
+<attribute name="single" type="string" key="key-unique" nvals="1"/>
+<texttype name="five" weight="500"/>
+<texttype name="four"/>
+<texttype name="one" weight="100"/>
+<texttype name="three"/>
+<texttype name="two"/>
+</indexcreation>
+<indexing>
+<nestedattrs logaction="stop"/>
+<nestedtext logaction="!log" indexaction="inherit"/>
+<unknownattrs logaction="log"/>
+<unknowntext logaction="log" indexaction="default"/>
+</indexing>
+<searching>
+<highlight name="b"/>
+<querylog path="/home/user/nextrieve/queries"/>
+<threads connector="50" core="5" worker="100"/>
+</searching>
+</ntv:resource>
+EOD

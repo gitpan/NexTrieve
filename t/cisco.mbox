@@ -1,0 +1,63 @@
+From me
+From: me
+To: you
+Subject: before subject
+
+before message
+
+From me Thu Oct 22 14:48:49 1998
+Date: Thu, 22 Oct 1998 14:48:21 +0100
+To: someone
+From: me
+Subject: subjecto
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Status: OR
+
+ <<NWSDEAL9.DOC>>=20
+Enkele weken geleden heb ik u reeds gemeld dat wij
+
+From someone
+From: someone
+To: me
+Date: Wed, 14 Oct 1998 11:06:16 -0500
+Subject: other subjecto
+Content-type: multipart/mixed; 
+	Boundary="0__=gAoS8ghPpBvi9R0jipyqEtA1ucqgX4grEu8ZiNcHTrURSBL4LcDAoR5L"
+Content-Disposition: inline
+Status: OR
+
+--0__=gAoS8ghPpBvi9R0jipyqEtA1ucqgX4grEu8ZiNcHTrURSBL4LcDAoR5L
+Content-type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+
+
+Secure Computing Customer Support Bulletin
+October, 1998
+
+What
+--0__=gAoS8ghPpBvi9R0jipyqEtA1ucqgX4grEu8ZiNcHTrURSBL4LcDAoR5L
+Content-type: text/plain; charset=windos-1257
+Content-Disposition: inline
+Content-transfer-encoding: quoted-printable
+
+
+=92s New in Support
+
+On July 15 Secure Computing extended support hours for all products to =
+12
+hours. Secure=92s technical support representatives now are available t=
+o
+assist you with your questions from 7 a.m. to 7 p.m., Central Standard
+Time.
+
+--0__=gAoS8ghPpBvi9R0jipyqEtA1ucqgX4grEu8ZiNcHTrURSBL4LcDAoR5L--
+
+From me
+From: me
+To: you
+Subject: after subject
+
+after message
+

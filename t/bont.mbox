@@ -1,0 +1,42 @@
+From me 2002
+From: me
+To: you
+Subject: before message
+
+Before message
+
+From james bont 2002
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="=200012031218="
+To: me
+From: James Bont
+X-Mailer: 7365AE0A.2B0896CE.83121cf1893db66ebec899accaadffc1
+Subject: Bont Monthly Newsletter
+Date: Sun, 3 Dec 2000 11:13:01 +1000
+
+--=200012031218=
+Content-Type: text/html;charset=US-ASCII
+
+<html>
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Welcome to the new look monthly Bont Newsletter</title>
+</head>
+                        <font size="1">Welcome
+            to the December issue of the monthly Bont Newsletter. Inside you will find out
+            about all the latest</font>
+</html>
+
+--=200012031218=--
+
+
+From me 2002
+From: me
+To: you
+Subject: after message
+
+After message

@@ -1,0 +1,51 @@
+From me
+To: you
+Subject: before subject
+
+before message
+
+From someone Wed Aug  9 23:12:59 2000
+Date: Wed, 9 Aug 2000 23:08:26 +0200
+To: me
+From: A Stone
+Subject: Real video clip
+Content-Type: multipart/mixed; boundary="============_-1246267165==_============"
+
+--============_-1246267165==_============
+Content-Type: text/plain; charset="us-ascii" ; format="flowed"
+
+Horrifying and hilarious at the same time, this is the kind of tv my 
+mother watches.
+--============_-1246267165==_============
+Content-Id: <p0432040bb5b778a3047c@[193.242.82.19].0.0>
+Content-Type: multipart/appledouble; boundary="============_-1246267165==_D============"
+
+--============_-1246267165==_D============
+Content-Type: message/external-body; access-type=x-mutt-deleted;
+	expiration="Wed, 9 Aug 2000 23:37:57 +0200"; length=162
+
+Content-Transfer-Encoding: base64
+Content-Type: application/applefile; name="%Daystar.rm"
+Content-Disposition: attachment; filename="%Daystar.rm"
+ ; modification-date="Sat, 5 Aug 2000 11:51:06 +0200"
+
+
+--============_-1246267165==_D============
+Content-Type: message/external-body; access-type=x-mutt-deleted;
+	expiration="Wed, 9 Aug 2000 23:37:57 +0200"; length=1501391
+
+Content-Type: application/octet-stream; name="Daystar.rm"
+ ; x-mac-type="504E524D"
+ ; x-mac-creator="504E7374"
+Content-Disposition: attachment; filename="Daystar.rm"
+Content-Transfer-Encoding: base64
+
+
+--============_-1246267165==_D============--
+--============_-1246267165==_============--
+
+From me
+To: you
+Subject: after subject
+
+after message

@@ -6,7 +6,7 @@ package NexTrieve::Search;
 
 use strict;
 @NexTrieve::Search::ISA = qw(NexTrieve);
-$NexTrieve::Search::VERSION = '0.03';
+$NexTrieve::Search::VERSION = '0.29';
 
 # Use other NexTrieve modules that we need always
 
@@ -39,7 +39,7 @@ sub _new {
 # Handle any method/value pair setting
 
   $self->Resource( ref($_[0]) eq 'NexTrieve::Daemon' ?
-   shift->serverport : shift ) if @_;
+   shift->serverport : (ref($_[0]) eq 'ARRAY' ? @{shift(@_)} : shift) ) if @_;
   $self->Set( shift ) if @_;
 
 # Return the object
@@ -49,9 +49,13 @@ sub _new {
 
 #------------------------------------------------------------------------
 
-# OUT: 1 flag whether associated NexTrieve executable installed and executable
+# OUT: 1 flag: whether it should work or not
+#      2 expiration date of license ('' if not known)
+#      3 software version
+#      4 database version
+#      5 whether threaded or no
 
-sub executable { -x NexTrieve->new->NexTrievePath.'/ntvsearch' } #executable
+sub executable { NexTrieve->executable( 'ntvsearch' ) } #executable
 
 #------------------------------------------------------------------------
 
@@ -149,15 +153,11 @@ sub Hitlist {
     $hitlist->_tempfilename($filename=$self->tempfilename('hitlist')) if $temp;
     $hitlist->filename( $filename );
 
-#  Open the pipe to the search program
 #  Tell it to go searching
-#  Close the handle
 #  Read back the file if it is a temporary file
 #  Return the hitlist object
 
-    my $handle = $self->openfile( "|$command >$filename" );
-    print $handle $queryxml;
-    close( $handle );
+    $self->splat( $self->openfile( "|$command >$filename" ),$queryxml );
     $hitlist->read_file if $temp;
     return $hitlist;
 
@@ -224,40 +224,108 @@ The Search object of the Perl support for NexTrieve.  Do not create
 directly, but through the Search method of the NexTrieve or the
 NexTrieve::Collection object.
 
+The NexTrieve::Search object either accesses a NexTrieve search service through
+the "ntvsearch" program (as described on
+http://www.nextrieve.com/usermanual/2.0.0/ntvsearch.stm ) or through a NexTrieve
+server process using the "ntvsearchd" program (as described on
+http://www.nextrieve.com/usermanual/2.0.0/ntvsearchd.stm ), previously started
+by a NexTrieve::Daemon object.
+
 =head1 CLASS METHODS
 
 These methods are available as class methods.
 
 =head2 executable
 
- $executable = NexTrieve::Search->executable;
+ $executable = NexTrieve::Daemon->executable;
+ ($program,$expiration,$software,$database) = NexTrieve::Search->executable;
 
-=head1 METHODS
+Return information about the associated NexTrieve program "ntvsearch".  Please
+note that calling this method only makes sense if the search service is
+B<not> running as a server process.
+
+The first output parameter contains the full program name of the NexTrieve
+executable "ntvsearch".  It contains the empty string if the "ntvsearch"
+executable could not be found or is not executable by the effective user.
+Can be used as a flag.  Is the only parameter returned in a scalar context.
+
+If this method is called in a list context, an attempt is made to execute
+the NexTrieve program "ntvsearch" to obtain additional information.  Then
+the following output parameters are returned.
+
+The second output parameter returns the expiration date of the license that
+NexTrieve is using by default.  If available, then the date is returned as a
+datestamp (YYYYMMDD).
+
+The third output parameter returns the version of the NexTrieve software that
+is being used.  It is a string in the form "M.m.rr", whereby "M" is the major
+release number, "m" is the minor release number and "rr" is the build number.
+
+The fourth output parameter returns the version of the internal database that
+will be created by the version of the NexTrieve software that is being used.
+It is a string in the form "M.m.rr", whereby "M" is the major release number,
+"m" is the minor release number and "rr" is the build number.
+
+=head1 OBJECT METHODS
 
 These methods are available to the NexTrieve::Search object.
 
 =head2 Hitlist
 
- $hitlist = $search->Hitlist( $query );
+ $hitlist = $search->Hitlist( $xml | $query );
+ $search->Hitlist( $xml | $query, filename );
+
+The "Hitlist" method returns a NexTrieve::Hitlist object for a query or stores
+the hitlist XML in the file specified.
+
+The first input parameter specifies the query XML that should be sent to the
+search service.  It can either be the "real" query XML that you created
+yourself, or a NexTrieve::Query object.
+
+The second input parameter is especially important if the "Hitlist" method
+is called in a void context: it specifies the filename in which the hitlist
+XML should be directly stored.
+
+If the "Hitlist" method is called in a void context, the actual parsing of
+the hitlist XML is skipped, making for a very much faster method.  This way
+of calling the "Hitlist" method is especially handy when processing hitlist
+XML using other means, e.g. the "xsltproc" program of the "libxml2" package
+(as available from http://gnome.org ).
 
 =head2 Resource
 
- $resource = $search->Resource( | file | xml | {method => value} );
+ $resource = $search->Resource;
+ $search->Resource( $resource | file | xml | {method => value} );
+
+The "Resource" method is primarily intended to allow you to obtain the
+NexTrieve::Resource object that is (indirectly) created when the
+NexTrieve::Search object is created.  If necessary, it can also be used
+to create a new NexTrieve::Resource object associated with the
+NexTrieve::Search object.
+
+=head1 OTHER METHODS
+
+The following methods address other properties of the NexTrieve::Search
+object.
 
 =head2 indexdir
 
  $search->indexdir( $indexdir );
  $indexdir = $search->indexdir;
 
+The "indexdir" method specifies an indexdirectory B<other> than the
+indexdirectory that is specified in the L<Resource> object.  By default, the
+indexdirectory information from the L<Resource> object is used.
+
 =head1 AUTHOR
 
-Elizabeth Mattijsen, <liz@nextrieve.com>.
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
-Please report bugs to <perlbugs@nextrieve.com>.
+Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

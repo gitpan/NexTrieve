@@ -1,0 +1,50 @@
+From me
+To: you
+Subject: before subject
+
+before message
+
+From joep Mon Apr 22 15:53:04 1996
+From: Joep
+To: me
+Subject: the zubject
+Content-Type: multipart/mixed; boundary="------------545275066063"
+
+This is a multi-part message in MIME format.
+
+--------------545275066063
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+...and this is what the page should look like after a 
+search.
+
+cheers Joep
+
+--------------545275066063
+Content-Type: multipart/appledouble; boundary="----------ad7145750B5EA7"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline; filename="result.html"
+
+------------ad7145750B5EA7
+Content-Type: application/applefile
+Content-Transfer-Encoding: base64
+
+AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQABAAAA
+AAAAAAAAAAAAAAABAAAAAmwAAAFsAAAAMgI5s8wXggAAABwAMgAAQkJTUgAAAAoCUP//AAAA
+AAI5rXQ=
+
+------------ad7145750B5EA7
+Content-Type: text/plain; name="result.html"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline; filename="result.html"
+
+SVpFPS0xPg0NTlJDIFdlYnBhZ2luYSdzICZjb3B5Ow0NPEZPTlQgU0laRT0tMj4NDSBOUkMg
+
+--------------545275066063--
+
+From me
+To: you
+Subject: after subject
+
+after message

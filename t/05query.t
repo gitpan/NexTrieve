@@ -9,7 +9,7 @@ use NexTrieve qw(Query);
 $loaded = 1;
 ok( 1 );
 
-my $ntv = NexTrieve->new( {DieOnError => 1} );
+my $ntv = NexTrieve->new( {RaiseError => 1} );
 my $version = $ntv->version;
 
 # 02 Create empty query file, check version
@@ -36,7 +36,7 @@ EOD
 $xml =
  qq(<ntv:query xmlns:ntv="http://www.nextrieve.com/$version"></ntv:query>);
 $query = $ntv->Query( $xml );
-ok( $query->xml,$xml );
+$query->xml unless ok($query->xml,$xml);
 
 # 07 Check if simple value setting and returning works
 my $string = 'one two three';
@@ -45,15 +45,16 @@ ok( $query->query,$string );
 
 # 08 Check if XML is correctly generated with given value
 $xml = <<EOD;
+<?xml version="1.0" encoding="iso-8859-1"?>
 <ntv:query xmlns:ntv="http://www.nextrieve.com/$version" longform="1">
 $string
 </ntv:query>
 EOD
-ok($query->xml,$xml);
+$query->xml unless ok($query->xml,$xml);
 
 # 09 Check if creation with method specification works ok
 $query = $ntv->Query( {query => $string} );
-ok($query->xml,$xml);
+$query->xml unless ok($query->xml,$xml);
 
 # 10 Check if we can create a file
 $filename = "$0.xml";
@@ -63,11 +64,11 @@ ok(-e $filename);
 
 # 11 Check if we can read the file that was just created and has the same result
 $query->read_file( $filename );
-ok($query->xml,$xml);
+$query->xml unless ok($query->xml,$xml);
 
 # 12 Check if we can create a new object with the just created file
 $query = $ntv->Query( $filename );
-ok($query->xml,$xml);
+$query->xml unless ok($query->xml,$xml);
 
 # 13 Check if can be used to update existing query file
 unlink( $filename );

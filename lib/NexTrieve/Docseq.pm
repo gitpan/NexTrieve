@@ -6,7 +6,11 @@ package NexTrieve::Docseq;
 
 use strict;
 @NexTrieve::Docseq::ISA = qw(NexTrieve);
-$NexTrieve::Docseq::VERSION = '0.03';
+$NexTrieve::Docseq::VERSION = '0.29';
+
+# Use all the Perl modules needed here
+
+use NexTrieve::Document ();
 
 # Initialize the list of texttype keys
 
@@ -56,11 +60,9 @@ sub add {
 
 # Obtain the object
 # Add the chunks to the object
-# Set the encoding if none was specified yet
 
   my $self = shift;
   my $class = ref($self);
-  $self->{$class.'::encoding'} ||= $self->NexTrieve->encoding || 'utf-8';
 
 # If we're streaming
 #  For all of the data specified
@@ -83,13 +85,20 @@ sub add {
 
 #------------------------------------------------------------------------
 
+#  IN: 1 new setting of bare XML flag (default: no change)
+# OUT: 1 current/old setting of bare XML flag
+
+sub bare { shift->_class_variable( 'bare',@_ ) } #bare
+
+#------------------------------------------------------------------------
+
 sub done {
 
 # Obtain the object
-# Make sure the outer container is closed on all pipes
+# Make sure the outer container is closed on all pipes unless inhibited
 
   my $self = shift;
-  $self->_pipe( \<<EOD );
+  $self->_pipe( \<<EOD ) unless $self->bare;
 </ntv:docseq>
 EOD
 
@@ -104,7 +113,40 @@ EOD
 
 #------------------------------------------------------------------------
 
-#  IN: 1..N filenames or handles to stream to
+# OUT: 1 always 'utf-8'
+
+sub encoding {
+
+# Obtain the object
+# Add error if an attempt to change to something we don't want
+# Return whatever we have for the object
+
+  my $self = shift;
+  $self->_add_error( "Cannot change encoding of Docseq object" ) if @_;
+  return $self->{ref($self).'::encoding'} ||= 'utf-8';
+} #encoding
+
+#------------------------------------------------------------------------
+
+#  IN: 1..N files to be processed
+# OUT: 1 the object itself, handy for one-liners
+
+sub files {
+
+# Obtain the object
+# Obtain the NexTrieve object
+# Loop for all the parameters, create Document objects and add to the Docseq
+# Return the object
+
+  my $self = shift;
+  my $ntv = $self->NexTrieve;
+  $self->add( $ntv->Document->read_file( $_ ) ) foreach @_;
+  return $self;
+} #files
+
+#------------------------------------------------------------------------
+
+#  IN: 1..N filenames or handles to stream to (none: to STDOUT)
 # OUT: object itself
 
 sub stream {
@@ -117,27 +159,26 @@ sub stream {
 
 # If there is streaming info already
 #  Add error and return
-# Elseif there are no parameters specified
-#  Add error and return
 
   if (exists $self->{$class}) {
     return $self->_add_error(
      "Can only call method 'stream' once on an object" );
-  } elsif (!@_) {
-    return $self->_add_error( "Must specify at least one stream" );
   }
 
 # Make sure we have a DOM
-# Make sure we have an encoding if none was specified yet
 # Obtain the version information and initial XML
 # Return now if an error has occurred
 
   $self->_create_dom;
-  $self->{$class.'::encoding'} ||= $self->NexTrieve->encoding || 'utf-8';
   my ($version,$xml) = $self->_init_xml;
   return $self unless $version;
 
 # Initialize the handle
+# Make sure we're streaming to STDOUT if nothing specified
+
+  my $handle;
+  push( @_,\*STDOUT ) unless @_;
+
 # For all of the parameters specified
 #  If it is not just a string (assume it is an object we can print to)
 #   Save the handle
@@ -145,7 +186,6 @@ sub stream {
 #   Attempt to open the file, return if failed
 #  Save the handle in the object
 
-  my $handle;
   foreach (@_) {
     if (ref($_)) {
       $handle = $_;
@@ -156,13 +196,13 @@ sub stream {
   }
 
 # If it is version 1.0
-#  Add the start of the container
+#  Add the start of the container unless inhibited
 #  Add the chunks that we have so far
 #  Pipe them to whatever is needed
 #  Delete the chunks that we had so far
 
   if ($version eq '1.0') {
-    $xml .= $self->_init_container( 'docseq' );
+    $xml .= $self->_init_container( 'docseq' ) unless $self->bare;
     $self->_add_chunks( \$xml );
     $self->_pipe( \$xml );
     delete( $self->{$class.'::sequence'} );
@@ -205,21 +245,26 @@ sub _create_dom {
 
 # Obtain the object
 # Save the class of the object
+# Obtain the field for encoding
 # Return now if there is a DOM already
 
   my $self = shift;
   my $class = ref($self);
+  my $field = $class.'::encoding';
   return if exists $self->{$class.'::version'};
 
 # Initialize the version, xml and attributes
 # If there is XML to be processed
 #  Obtain the encoding and the XML to work with
+#  Recode the XML if it is not UTF-8 yet, setting field on the fly
 #  Save the version and attributes
 #  Return now if no version information found
 
   my ($version,$attributes); my $xml = $self->{$class.'::xml'} || '';
   if ($xml) {
-    $self->{$class.'::encoding'} = $self->_encoding_from_xml( \$xml );
+    $self->{$field} = $self->_encoding_from_xml( \$xml );
+    $xml = $self->recode( $self->{$field} = 'utf-8',$xml )
+     if $self->{$field} ne 'utf-8';
     ($version,$attributes) = $self->_version_from_xml( \$xml,'ntv:docseq' );
     return unless $version;
 
@@ -285,11 +330,11 @@ sub _create_xml {
   return unless $version;
 
 # If it is version 1.0
-#  Add the start of the container
+#  Add the start of the container unless inhibited
 #  Add all the chunks
 
   if ($version eq '1.0') {
-    $xml .= $self->_init_container( 'docseq' );
+    $xml .= $self->_init_container( 'docseq' ) unless $self->bare;
     $self->_add_chunks( \$xml );
   }
 
@@ -340,7 +385,7 @@ sub _pipe {
 
   my $self = shift;
   foreach my $handle (@{$self->{ref($self)}}) {
-    print $handle ${$_[0]};
+    print $handle ${$_[0]} || '';
   }
 } #_pipe
 
@@ -387,33 +432,105 @@ directly, but through the Docseq method of the NexTrieve object.
 
 =head1 METHODS
 
-The following methods are available to the NexTrieve::Docseq object, apart
-from the ones inherited from the NexTrieve module.
+The following methods are available to the NexTrieve::Docseq object.
+
+=head2 add
+
+ $docseq->add( $data | \$data | [$data] | {container => $data} | $document );
+
+The "add" method allows you to add data to a document sequence.  Each input
+parameter can be one of the following:
+
+- scalar value containing XML in UTF-8
+
+ $docseq->add( "<document><attributes><id>1</id></attributes></document>" );
+
+- reference to a scalar value containing XML in UTF-8
+
+ $docseq->add( \"<document><attributes><id>1</id></attributes></document>" );
+
+- reference to a list of values containing XML in UTF-8
+
+ $docseq->add( ["<document><attributes><id>1</id></attributes></document>"] );
+
+- NexTrieve::Document object
+
+ my $document = $ntv->Document( {attribute => [qw(id 1)]} );
+ $docseq->add( $document ); # calls "xml" method on object
+
+- reference to hash, containing any of above, key = name of container, value = string encoded in UTF-8
+
+ $docseq->add( {document => {attributes => {id => 1}}} );
+
+All of the above are equivalent ways of doing the same thing.
+
+All forms of expressions can be mixed: everything will be expanded until it is
+a scalar value which can be added to the XML of the document sequence.
+
+Please note that you usually do not call the "add" method directly, but that
+this rather happens by customized versions of the "Docseq" method in various
+other modules.
+
+=head2 bare
+
+ $ntvobject->bare( true | false );
+ $bare = $ntvobject->bare;
+
+The XML generated by the NexTrieve family, consists of an outer container
+indicating the version of NTVML the XML conforms to.  In some cases (e.g. when
+creating document sequences to be merged together later) it may be desirable
+to have the outer container to be absent, i.e. to have the XML be created
+"bare".  You can achieve this by calling the "bare" method with a true value
+before the XML is generated.
+
+=head2 done
+
+ $docseq->done; # not really needed, DESTROY on object does same
+
+The "done" method is only needed when the NexTrieve::Docseq is in L<stream>ing
+mode.  It stops the streaming by closing the <ntv:docseq> container and closing
+the handle that was used for writing to the stream.
+
+Calling the "done" method is not strictly necessary.  As soon as the object
+goes out of scope, a call to "done" is done autmatically.
 
 =head2 stream
 
  open( $handle,">filename" );
  $docseq->stream( $handle );
 
- $docseq->stream( filename );
+ $docseq->stream( filename1,filename2 );
 
-=head2 add
+The "stream" method can be called to cause the document sequence to be streamed
+to a file or an external process (such as the NexTrieve indexer).
 
- $docseq->add( $data | \$data | [$data] | {container => $data} | $document );
+Each input parameter can either be a filename or an already opened handle.
+If it is a filename, the file is opened for writing as a new file, losing any
+contents that were stored there previously.
 
-=head2 done
+Please note that NexTrieve::Index module allows you to create a
+NexTrieve::Docseq object that automatically streams to the NexTrieve indexer.
+See the NexTrieve::Index module for more information.
 
- $docseq->done # not really needed, DESTROY on object does same
+=head2 xml
+
+ $docseq->xml( $xml );
+ $xml = $docseq->xml;
+
+The "xml" method can only be used if the NexTrieve::Docseq object is B<not> in
+streaming mode.  You can either use it to set the complete XML of the document
+sequence or have it returned to you.  Only the latter seems to be a sensible
+thing to do.
 
 =head1 AUTHOR
 
-Elizabeth Mattijsen, <liz@nextrieve.com>.
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
-Please report bugs to <perlbugs@nextrieve.com>.
+Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

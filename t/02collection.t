@@ -11,10 +11,7 @@ use NexTrieve qw(Collection);
 $loaded = 1;
 ok( 1 );
 
-use Carp ();
-$SIG{__DIE__} = \&Carp::confess;
-
-my $ntv = NexTrieve->new( {DieOnError => 1} );
+my $ntv = NexTrieve->new( [RaiseError => 1] );
 my $version = $ntv->version;
 
 # 02 Create empty collection
@@ -39,7 +36,8 @@ ok($resource->filename,$filename);
 ok( $resource->version,$version );
 
 # 07 Check whether empty collection file comes out ok
-ok( $resource->xml,<<EOD );
+$resource->xml unless ok( $resource->xml,<<EOD );
+<?xml version="1.0" encoding="iso-8859-1"?>
 <ntv:resource xmlns:ntv="http://www.nextrieve.com/$version">
 </ntv:resource>
 EOD

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<filename>t/titleamp.html</filename>
+<title>
+Supporting Software &amp; Reuse Wit</title>
+</attributes>
+<text>
+<title>
+Supporting Software &amp; Reuse Within an
+Integrated Software Development Environment
+ (Position Paper)
+  
+ </title>
+This is the body
+</text>
+</document>
+</ntv:docseq>

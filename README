@@ -1,6 +1,6 @@
 README for NexTrieve
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
@@ -19,25 +19,30 @@ well versed in the handling of XML, and you are well versed in using Perl,
 then these Perl modules are for you: they will handle everything in a
 completely object-oriented manner.
 
-The following modules are part of the basic distribution:
+The following modules are part of the distribution:
 
  NexTrieve                      base module
  NexTrieve::Collection          logical collection object
+ NexTrieve::Collection::Index   logical index object within a collection
  NexTrieve::Daemon              logical daemon object
+ NexTrieve::DBI                 convert DBI statement to document sequence
  NexTrieve::Docseq              logical document sequence for indexing
  NexTrieve::Document            logical document object
  NexTrieve::Hitlist             result of query from search engine
  NexTrieve::Hitlist::Hit        a single hit of the result
- NexTrieve::HTML                convert HTML to logical Document object
- NexTrieve::Index               index XML
- NexTrieve::Replay              turn Querylog into Hitlist objects
+ NexTrieve::HTML                convert HTML-file(s) to logical document(s)
+ NexTrieve::Index               create an index out of a docseq
+ NexTrieve::Mbox                convert Unix mailbox to document sequence
+ NexTrieve::Message             convert Mail::Message object(s) to document(s)
+ NexTrieve::MIME                MIME-type conversions for documents
+ NexTrieve::Overview            an overview of NexTrieve and its Perl support
+ NexTrieve::Replay              turn Querylog into Hitlist for a Search
  NexTrieve::Resource            create/adapt resource-file
+ NexTrieve::RFC822              convert message(s) to logical document(s)
  NexTrieve::Search              logical search engine object
  NexTrieve::Query               create/adapt query
  NexTrieve::Querylog            turn query log into Query objects
-
-If you are used to handling XML in Perl, you probably only need the
-IO::Socket module to perform searches with NexTrieve.
+ NexTrieve::UTF8                change encoding to UTF-8
 
 The build is standard:
 

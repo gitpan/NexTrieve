@@ -1,0 +1,287 @@
+#!/usr/bin/perl -w
+
+#-------------------------------------------------------------------------
+
+# Make sure we pre-declare everything
+# Use the necessary Perl modules
+
+use strict;
+use NexTrieve qw(Mbox);
+
+# Output warning if it is the wrong version
+
+warn <<EOD if $NexTrieve::VERSION ne '0.29';
+$0 is not using the right version of the associated Perl modules.
+Operation of this script may be in error because of this.
+EOD
+
+# Create a NexTrieve object
+
+my $ntv = NexTrieve->new( {PrintError => 1} );
+
+# If there are no arguments specified whatsoever and no files specified in pipe
+#  Make sure we can execute external programs
+#  Show the POD documentation
+#  And exit
+
+if (!@ARGV and -t STDIN) {
+  $ntv->untaint( $ENV{'PATH'} );
+  exec( 'perldoc',$0 );
+  exit;
+}
+
+# Initialize stuff
+
+my %datetype = ();
+my %attrtype = ();
+my %texttype = ();
+my @mailbox = ();
+my $bare = '';
+my $baseoffset;
+my $binarycheck = '';
+my $conceptualmailbox = '';
+my $defaultencoding = 'iso-8859-1';
+my $nopi = '';
+my $flag;
+
+# For all of the parameters
+#  If it is a (new) flag
+#   Obtain the flag
+#   If forcing bare XML, set flag and reset the global flag
+#   If forcing binary check, set flag and reset the global flag
+#   If forcing nopi, set flag and reset the global flag
+#   Reloop
+#  Warn user if parameter without known flag and exit
+
+foreach (@ARGV) {
+  if (m#^-(\w)#) {
+    $flag = $1;
+    $bare = 1, $flag = '' if $flag eq 'b';
+    $binarycheck = 1, $flag = '' if $flag eq 'i';
+    $nopi = 1, $flag = '' if $flag eq 'n';
+    next;
+  }
+  warn "Must specify type of parameter first\n",exit unless $flag;
+
+#  Make whatever we got lowercase
+#  Set ordinary attribute if so indicated
+#  Set date attribute if so indicated
+#  Set texttype if so indicated
+#  Set mailbox if so indicated
+  
+  $_ = lc($_);
+  $attrtype{$_}++ if $flag eq 'a';
+  $datetype{$_}++ if $flag eq 'd';
+  $texttype{$_}++ if $flag eq 't';
+  push( @mailbox,$_ ) if $flag eq 'f';
+
+# If an encoding is specified
+#  Obtain that encoding
+
+  if ($flag eq 'E') {
+      $defaultencoding = $_; $flag = '';
+
+#  Elseif an offset is specified
+#   Error if we already have an offset
+#   If it is a numeric value
+#    Use that
+#   Elseif the file does not exist
+#    Start from the beginning
+#   Elseif there is a file given by that name, use its size (no further action)
+#   Else
+#    Error
+
+  } elsif ($flag eq 'o') {
+    die "Can only specify one offset value\n" if defined($baseoffset);
+    if (m#^\d+$#) {
+      $baseoffset = $_;
+    } elsif (!-e) {  
+      $baseoffset = 0;
+    } elsif ($baseoffset = -s) {
+    } else {
+      die "Cannot handle offset value '$_'\n";
+    }
+
+#  Elseif a conceptual filename is specified
+#   Error if we already have one
+#   Save the value for later usage
+
+  } elsif ($flag eq 'c') {
+    die "Can only have one conceptual filename\n" if $conceptualmailbox;
+    $conceptualmailbox = $_;
+  }
+}
+
+# If we're using a conceptual mailbox
+#  Set the base offset to the size of the file if none given yet and valid file
+# Elseif we have a baseoffset defined (but no conceptual mailbox)
+#  Warn the user
+#  Reset the offset
+# Else
+#  Reset the offset (no problem when running with warnings)
+
+if ($conceptualmailbox) {
+  die "Must specify a -o offset when using a conceptual mailbox\n"
+   unless defined($baseoffset);
+} elsif (defined($baseoffset)) {
+  warn "*** Cannot use offset without conceptual mailbox, resetting offset\n";
+  $baseoffset = 0;
+} else {
+  $baseoffset = 0;
+}
+
+# If no non-file parameters were specified
+#  Set the default attributes and text types
+
+if (!keys %datetype and !keys %attrtype and !keys %texttype) {
+  $datetype{'date'}++;
+  $attrtype{'from'}++;
+  $attrtype{'subject'}++;
+  $texttype{'subject'}++;
+}
+
+# If there are filenames to be read from STDIN
+#  For all of the lines that can be read
+#   Remove the new line (whatever it is)
+#   Save the filename of the mailbox
+
+unless (-t STDIN) {
+  while (<STDIN>) {
+    chomp();
+    push( @mailbox,$_ );
+  }
+}
+
+# If there are files to be processed
+#  Make sure they are all valid
+# Else (no files)
+#  Warn the user and quit
+
+if (@mailbox) {
+  @mailbox = map {m#[ <>`]# ? warn "Skipping $_\n" : $_} @mailbox;
+} else {
+  die "Nothing to be done!\n";
+}
+
+# Set the default encoding if any specified
+# Create the mailbox object with the right RFC822 settings
+
+$ntv->DefaultInputEncoding( $defaultencoding ) if $defaultencoding;
+my $mbox = $ntv->Mbox( {
+ attribute_processor	=> [map {[$_,'datestamp']} keys %datetype],
+ binarycheck		=> $binarycheck,
+ field2attribute	=> [keys %datetype,keys %attrtype],
+ field2texttype		=> [keys %texttype],
+} );
+
+# Make sure the mailbox is conceptual if so specified
+# Make sure the baseoffset is set
+
+$mbox->conceptualmailbox( $conceptualmailbox ) if $conceptualmailbox;
+$mbox->baseoffset( $baseoffset );
+
+# Create the docseq object
+# Set the bare XML flag if so specified
+# Set the no processor instruction flag if so specified
+# Make sure we'll be streaming to STDOUT to reduce memory requirements
+# Do the conversion and finish up the stream
+
+my $docseq = $ntv->Docseq;
+$docseq->bare( $bare ) if $bare;
+$docseq->nopi( $nopi ) if $nopi;
+$docseq->stream;
+$mbox->Docseq( $docseq,@mailbox )->done;
+
+#-------------------------------------------------------------------------
+
+__END__
+
+=head1 mailbox2ntvml
+
+Basic mailbox to XML converter for use with NexTrieve.
+
+=head2 Usage
+
+ mailbox2ntvml [-d date] [-a from subject] [-b] [-n] [-i] [-t subject] [-c name] [-o offset|filename] [-E defaulinputencoding] -f mailbox1 [mailboxN...]
+
+=head2 Parameters
+
+ -d following parameters should be considered as date attributes
+ -a following parameters should be considered as standard attributes
+ -t following parameters should be considered as text-types
+ -f following parameters should be considered mailbox filenames
+
+ -c use same conceptual mailbox name for all files specified
+ -o initial offset or filename to be added to all offset values (if using -c)
+ -E specify encoding to assume if no encoding is found (default: "iso-8859-1")
+ -n do not output <?xml..?> processor instruction
+ -b do not output <ntv:docseq> container (bare XML)
+ -i perform binary check on parts, ignore if considered binary
+
+Mailbox filenames can also be specified on seperate lines on STDIN.
+
+=head2 Example
+
+Convert content of file "mailbox" to xml and store that in the file "xml".
+Check each message for From:, Date: and Subject: headers and create a
+container "document" for each message.  Convert Date: to a datestamp value
+(YYYYMMDD), convert From:, To: and Subject: headers into attributes and
+Subject: header into a text type.
+
+ mailbox2ntvml -f mailbox >xml
+
+=head2 Example
+
+Convert content of file "mailbox" to xml and store that in the file "xml".
+Check each message for Date:, Subject: and User-Agent: headers and
+create a container "document" for each message.  Convert Date: to a datestamp
+value (YYYYMMDD), convert From: and User-Agent: headers into attributes and
+the Subject: header into a text type.  Then add the "docseq" container around
+it and have that indexed by NexTrieve.
+
+ mailbox2ntvml -d date -a user-agent -t subject -f mailbox | docseq | ntvindex -
+
+=head2 Example
+
+Convert all the files in the "mailboxes" directory to XML with the standard
+attributes and text-types and have that indexed by NexTrieve.
+
+ ls mailboxes/* | mailbox2ntvml -c allmessages | docseq | ntvindex -
+ cat mailboxes/* >>allmessages
+ rm mailboxes/*
+
+=head2 Example
+
+Convert all messagefiles from an "incoming" directory into a virtual mailbox
+called "allmessages", index these with NexTrieve and add all the messages
+to the virtual mailbox.
+
+ ls incoming/* | mailbox2ntvml -c allmessages | docseq | ntvindex -
+ cat incoming/* >
+
+=head1 Requirements
+
+=head2 Date::Parse
+
+Requires the availability of the Date::Parse module, available from your
+nearest CPAN site (http://www.cpan.org), if you want the special date handling
+to be applied.  Gracefully declines doing any special date handling if the
+Date::Parse module is not available.
+
+=head1 AUTHOR
+
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
+
+Please report bugs to <perlbugs@dijkmat.nl>.
+
+=head1 COPYRIGHT
+
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+reserved.  This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+http://www.nextrieve.com and the NexTrieve::xxx modules.
+
+=cut

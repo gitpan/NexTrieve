@@ -6,7 +6,7 @@ package NexTrieve::Hitlist;
 
 use strict;
 @NexTrieve::Hitlist::ISA = qw(NexTrieve);
-$NexTrieve::Hitlist::VERSION = '0.03';
+$NexTrieve::Hitlist::VERSION = '0.29';
 
 # Use all the submodules that we always need
 
@@ -357,47 +357,13 @@ NexTrieve::Hitlist - handle the Hitlist specifications of NexTrieve
 The Hitlist object of the Perl support for NexTrieve.  Do not create
 directly, but through the Hitlist method of the NexTrieve object.
 
-=head1 METHODS
+Please note that you rarely create the NexTrieve::Hitlist object directly.
+It is usually created by the NexTrieve::Search object or the NexTrieve::Replay
+object.
 
-The following methods are available to the NexTrieve::Hitlist object.
+=head1 OBJECT METHODS
 
-=head2 id
-
- $id = $hitlist->id;
-
-=head2 firsthit
-
- $firsthit = $hitlist->firsthit;
-
-=head2 lasthit
-
- $lasthit = $hitlist->lasthit;
- 
-=head2 displayedhits
-
- $displayedhits = $hitlist->displayedhits;
-
-=head2 totalhits
-
- $totalhits = $hitlist->totalhits;
-
-=head2 admin
-
- $admin = $hitlist->admin;
-
-=head2 errors
-
- @error = $hitlist->errors;
-
-=head2 warnings
-
- @warning = $hitlist->warnings;
-
-=head2 Hits
-
- foreach $hit ($hitlist->Hits) {
- # display result here
- }
+The following methods return one or more objects.
 
 =head2 Hit
 
@@ -406,15 +372,114 @@ The following methods are available to the NexTrieve::Hitlist object.
  # display result here
  }
 
+The "Hit" method returns a NexTrieve::Hitlist::Hit object.  The input parameter
+indicates the ordinal number of the hit for which to return the Hit object.
+The range of the ordinal number is determined by what the methods L<firsthit>
+and L<lasthit> return.
+
+See method L<Hits> to have list returned with all NexTrieve::Hitlist::Hit
+objects that are contained in the object.
+
+=head2 Hits
+
+ foreach $hit ($hitlist->Hits) {
+ # display result here
+ }
+
+The "Hits" method returns the list of NexTrieve::Hitlist::Hit objects that is
+contained in the object.  Use method L<ordinal> on the NexTrieve::Hitlist::Hit
+object to find out its ordinal number (what you would have otherwise specified
+as the input parameter to the L<Hit> method.
+
+=head1 OTHER METHODS
+
+The following methods return aspects of the NexTrieve::Hitlist object.
+
+=head2 id
+
+ $id = $hitlist->id;
+
+The "id" method returns the value of the "id" field in the hitlist.  It is
+only returned if the "id" method was called on the NexTrieve::Query object that
+was used to create this hitlist.
+
+=head2 firsthit
+
+ $firsthit = $hitlist->firsthit;
+
+The "firsthit" method returns the ordinal number of the first hit in the
+hitlist.  This is always the same as the value that was specified with the
+"firsthit" method on the NexTrieve::Query object.
+
+See L<lasthit> to find out the ordinal number of the last hit.
+
+=head2 lasthit
+
+ $lasthit = $hitlist->lasthit;
+ 
+The "lasthit" method returns the ordinal number of the last hit in the
+hitlist.  This is always the same or less than the value that was specified
+with the L<lasthit> method on the NexTrieve::Query object.
+
+See L<firsthit> to find out the ordinal number of the first hit.
+
+=head2 displayedhits
+
+ $displayedhits = $hitlist->displayedhits;
+
+The "displayedhits" method returns the number of hits that are returned in the
+hitlist.  If the L<firsthit> was specified to be one, or omitted in the
+creation of the NexTriev::Query object, then this has the same value as
+returned by method L<lasthit>.
+
+=head2 totalhits
+
+ $totalhits = $hitlist->totalhits;
+
+The "totalhits" method returns the number of hits that B<could> have been
+returned maximally in the hitlist.  It is always the same or less than the
+value that was specified with the "totalhits" method of the NexTrieve::Query
+object.
+
+=head2 admin
+
+ $admin = $hitlist->admin;
+
+The "admin" method returns the administrative information that was returned
+with the hitlist.  This is only returned if there was administrative
+information specified in the NexTrieve::Resource object that was used to
+index the content B<and> if any L<errors> or L<warnings> are returned.
+
+=head2 errors
+
+ @error = $hitlist->errors;
+
+The "errors" method returns a list of errors that were returned in the hitlist.
+If an error occurs, it is usually wise to perform some action that notifies
+the administrator of the search engine, as it indicates a serious problem in
+the functioning of the search engine.
+
+=head2 warnings
+
+ @warning = $hitlist->warnings;
+
+The "warnings" method returns a list of warnings that were returned in the
+hitlist.  You may choose to display these to the user of the search engine.
+Warnings include e.g. "Word xxxx not found in dictionary" if exact searching
+was used and that particular word does not occur in B<any> document.  If this
+happens when a single word was entered, it may be wise to point out to the
+user that a fuzzy search is also possible, or maybe even automatically perform
+the same search now with the fuzzy mode set.
+
 =head1 AUTHOR
 
-Elizabeth Mattijsen, <liz@nextrieve.com>.
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
 
-Please report bugs to <perlbugs@nextrieve.com>.
+Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@nextrieve.com>. All rights
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

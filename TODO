@@ -1,29 +1,34 @@
-If a Document has a known encoding, is it stripped before entering the Docseq?
-
 Check Collection: are all subobjects working correctly?
 
 Add support for query caching server configuration.
 
-Add module for doing encoding conversions.  Should try out what Perl modules
-are out there for attempting to do the conversion.  Build in the capability of
-doing that automagically by the objects in the future.
-
-Add module "Issue" that is capable of keeping multiple issues of an indexdir
-and have new issues made (either incrementally or from scratch), possibly
-together with an "Issues" module, which would allow you to specify how many
-issues to keep.
-
 Check all of the docs: create section of inherited methods in each submodule.
 Add more examples.
 
-Add module "HTML" for creating "Document" object from an HTML file.  Use
-ntvhtml2ntvml as a basis for this functionality.
+Add module "Tree" for handling a tree of HTML files.
 
-Add module "Message" for creating "Document" object from a mail or a newsgroup
-message.
+Add module "EZMLM" for handling all the messages in an ezmlm archive.
 
-Add module "Mailbox" for interfacing with the Perl Mailbox:: modules.
+Add module "MHonArc" for handling all the messages in a MHonArc archive.
 
-Add ultralite support to NexTrieve::Resource?
+Add module "Mailman" for handling all the messages in a Mailman archive.
 
-Why is t/querylog not removed when it _is_ empty?
+Add module "PDF" for handling PDF documents, probably based on standard Perl
+modules for handling PDF.
+
+Add module "Thread" for adding processor routines that automatically create
+threading information, optionally stored in a backend such as Storable or
+an SQL database.
+
+Add ultralite parameter support to NexTrieve::Resource.
+
+Add "hints" method for finding out what could be done to improve the
+performance of a module and all of its submodules, e.g. to load and install
+the Text::Iconv module for recoding.
+
+Create text processing routine for RFC822 that would create commented text and
+footer information.
+
+Add module for handling the mailbox format as created for news.search.nl and
+the mailing lists stuff, i.e. a tarfile for each day, gzipped --best.  Possibly
+use the same module for creation of mailboxes in this format also.

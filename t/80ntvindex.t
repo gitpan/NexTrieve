@@ -2,38 +2,32 @@
 # further tests, specifically for searching and daemonising.
 
 use Test;
-BEGIN { $tests = 10; plan tests => $tests }
+BEGIN { $tests = 14; plan tests => $tests }
 END { ok(0) unless $loaded }
 
 use NexTrieve qw(Docseq Index);
 $loaded = 1;
 
-unless (NexTrieve::Index->executable) {
+my($executable,$license,$software,$indexlevel) = NexTrieve::Index->executable;
+unless ($executable) {
   print "ok $_ # skip 'ntvindex' not executable or not found\n" foreach 1..$tests;
   exit;
 }
-ok( 1 );
+ok($software and $indexlevel);
 
-my $ntv = NexTrieve->new( {DieOnError => sub {print "whoopee"} } );
+my $ntv = NexTrieve->new( {RaiseError => 1 } );
 my $version = $ntv->version;
 my $basedir = $0 =~ m#^(.*?/)[^/]+$# ? $1 : '';
 
-# 02 Create indexdir directory
-
-$indexdir = "${basedir}indexdir";
-mkdir( $indexdir,0700 );
-ok(-d $indexdir);
-system( "rm -rf $indexdir/*" );
-
-# 03 Create querylog directory
-
+# 02 Create querylog directory
 $querylog = "${basedir}querylog";
-mkdir( $querylog,0700 );
+mkdir( $querylog,0777 );
 ok(-d $querylog);
-system( "rm -rf $querylog/*" );
+system( "rm -f $querylog/*" );
 
-# 04 Set up resource file
-my $resourcexml = "$indexdir/resource.xml";
+# 03 Set up resource file
+my $indexdir = "${basedir}indexdir";
+my $resourcexml = "${basedir}resource.xml";
 my $resource = $ntv->Resource( {
  indexdir	=> $indexdir,
  querylog	=> $querylog,
@@ -47,35 +41,77 @@ my $resource = $ntv->Resource( {
 $resource->write_file( $resourcexml );
 ok(-e $resourcexml);
 
-# 05 Set up indexing XML
+# 04 See if creation of Index object is successful
+my $index = $ntv->Index( $resource );
+ok($index);
+
+# 05 Create indexdir directory and make sure it's empty
+system( "rm -rf $indexdir" );
+ok($index->mkdir and -d $indexdir);
+
+# 06 Set up indexing XML
 my $indexxml = "$indexdir/index.xml";
 addchunks( $ntv->Docseq )->write_file( $indexxml );
 ok(-e $indexxml);
 
-# 06 See if direct index successful
-my $index = $ntv->Index( $resource,$indexxml );
-ok($index);
+# 07 See if indexing successful
+$index->RaiseError( 0 );
+my $exit = $index->index( $indexxml );
+$index->RaiseError( 1 );
+if ($exit) {
+  system( "rm -f $resourcexml $indexdir/*; rmdir $indexdir" );
+  system( "rm -f $querylog/*; rmdir $querylog" );
+  $ntv->openfile( "${basedir}ntvskip",'>' );
+  print "ok $_ # skip NexTrieve not functional\n" foreach 7..$tests;
+  exit;
+}
+ok($exit==0);
 
-# 07 Check if indexing started and completed
+# 08 Check if indexing started and completed
 my $result = $index->result;
-ok($result =~ m#Indexing "$indexxml" starting# and
-   $result =~ m#Indexing done#);
+ok($result eq '' or
+ ($result =~ m#Indexing "$indexxml" starting# and $result =~ m#Indexing done#));
 
-# 08 Check if there is an integrity report, remove contents afterwards
+# 09 Check if there an integrity report can be created
 ok($index->integrity);
-system( "rm -rf $indexdir/*" );
-$resource->write_file;
 
-# 09 See if streaming index successful
+# 10 Check if we can start incremental updates
 $index = $ntv->Index( $resource );
+$index->update_start( 1 );
+ok(-d "$indexdir.new");
+
+# 11 See if streaming index successful
 addchunks( $index->Docseq( $indexxml ) );
 $result = $index->result;
-ok($result =~ m#Indexing "-" starting# and
-   $result =~ m#Indexing done#);
+ok($result eq '' or
+ $result =~ m#Indexing "-" starting#s and $result =~ m#Indexing done#s);
 
-# 10 Check if the integrity is ok
+# 12 Check if we can end updates
+$index->update_end;
+ok(-d "$indexdir.old");
+system( "rm -f $indexdir.old/*; rmdir $indexdir.old" );
+
+# 13 Check if the integrity is ok
 ok($index->integrityok);
 
+# 14 Check if we can create a resource file from the existing index
+$resource = eval{$index->ResourceFromIndex};
+my $skip = $resource ? '' : "Could not get <indexcreation> information";
+$resource->xml unless skip($skip,$resource || '' ? $resource->xml : '',<<EOD);
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:resource>
+<indexdir name="t/indexdir">
+<indexcreation>
+    <fuzzy accentaction="both"/>
+    <exact accentaction="both"/>
+    <attribute name="flag" type="flag" key="notkey" nvals="1"/>
+    <attribute name="number" type="number" key="keyed" nvals="1"/>
+    <attribute name="string" type="string" key="duplicates" nvals="*"/>
+    <texttype name="footer"/>
+    <texttype name="title"/>
+</indexcreation>
+</ntv:resource>
+EOD
 
 # Add chunks of stream for testing
 sub addchunks {

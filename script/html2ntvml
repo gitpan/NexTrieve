@@ -8,9 +8,16 @@
 use strict;
 use NexTrieve qw(HTML);
 
+# Output warning if it is the wrong version
+
+warn <<EOD if $NexTrieve::VERSION ne '0.29';
+$0 is not using the right version of the associated Perl modules.
+Operation of this script may be in error because of this.
+EOD
+
 # Create a NexTrieve object
 
-my $ntv = NexTrieve->new( {DieOnError => 1} );
+my $ntv = NexTrieve->new( {PrintError => 1} );
 
 # If there are no arguments specified whatsoever
 #  Make sure we can execute external programs when in taint mode
@@ -23,29 +30,41 @@ if (@ARGV==0 and -t STDIN) {
   exit;
 }
 
+# Initialize the ASP-style tags preprocessor
+# Initialize the bare XML flag
 # Initialize the binary check flag
-# Initialize the encoding
+# Initialize the default encoding
+# Initialize the PHP-style tags preprocessor
 # Initialize the maximum title length
 # Initialize the list of files
 # Define the flag to be used
 
-my $binarycheck;
-my $encoding;
-my $titlemax;
-my @file;
+my $asp = '';
+my $bare = '';
+my $binarycheck = '';
+my $defaultencoding = 'iso-8859-1';
+my $nopi = '';
+my $php = '';
+my $titlemax = '';
+my @file = ();
 my $flag;
 
 # For all of the parameters
 #  If it is a (new) flag
 #   Obtain the flag
 #   If forcing binary check, set flag and reset the global flag
+#   If forcing no processing instruction, set flag and reset the global flag
 #   Reloop
 #  Warn user if parameter without known flag and exit
 
 foreach (@ARGV) {
   if (m#^-(\w)#) {
     $flag = $1;
-    $binarycheck = 1, $flag = '' if $flag eq 'b';
+    $asp = 1, $flag = '' if $flag eq 'a';
+    $bare = 1, $flag = '' if $flag eq 'b';
+    $binarycheck = 1, $flag = '' if $flag eq 'i';
+    $nopi = 1, $flag = '' if $flag eq 'n';
+    $php = 1, $flag = '' if $flag eq 'p';
     next;
   }
   die "Must specify type of parameter first\n" unless $flag;
@@ -54,15 +73,15 @@ foreach (@ARGV) {
 
   push( @file,$_ ) if $flag eq 'f';
 
-# If an encoding is specified
+# If a default encoding is specified
 #  Obtain that encoding
 
-  if ($flag eq 'e') {
-    $encoding = $_; $flag = '';
+  if ($flag eq 'E') {
+    $defaultencoding = $_; $flag = '';
 
 #  Elseif it is a maximum length of a title
 #   Die now if strange value
-#   Set maximum lengtH and reset flag (no more values for this)
+#   Set maximum length and reset flag (no more values for this)
 
   } elsif ($flag eq 't') {
     die "Cannot specify '$_' as maximum length for title attributes\n"
@@ -77,31 +96,53 @@ foreach (@ARGV) {
 push( @file,<STDIN> ) unless -t STDIN;
 chomp( @file );
 
-# Create the HTML object
-# Set the binary check flag if set
-# Set the maximum length of the title if set
+# If there are files to be processed
+#  Make sure they are all valid
+# Else (no files)
+#  Warn the user and quit
 
-my $html = $ntv->HTML;
+if (@file) {
+  @file = map {m#[ <>`]# ? warn "Skipping $_\n" : $_} @file;
+} else {
+  die "Nothing to be done!\n";
+}
+
+# Set the default encoding if there is one specified
+# Create the HTML object
+# Set the ASP-style check flag if set
+# Set the binary check flag if set
+# Set the PHP-style check flag if set
+# If the maximum length of the title as an attribute is limited
+#  Set the limitation with an attribute processor
+
+$ntv->DefaultInputEncoding( $defaultencoding ) if $defaultencoding;
+my $html = $ntv->HTML->htmlsimple;
+$html->asp( $asp ) if $asp;
 $html->binarycheck( $binarycheck ) if $binarycheck;
-$html->titlemax( $titlemax ) if $titlemax;
+$html->php( $php ) if $php;
+if ($titlemax) {
+  $html->attribute_processor( ['title',sub {substr($_[0],0,$titlemax)}] );
+}
 
 # Create the docseq object
-# Set the encoding if there is any specified
+# Set the bare XML flag if so specified
+# Set the no processor instruction flag if so specified
 # Make sure we'll be streaming to STDOUT to reduce memory requirements
 # Do the conversion and finish up the stream
 
 my $docseq = $ntv->Docseq;
-$docseq->encoding( $encoding ) if $encoding;
-$docseq->stream( \*STDOUT );
+$docseq->bare( $bare ) if $bare;
+$docseq->nopi( $nopi ) if $nopi;
+$docseq->stream;
 $html->Docseq( $docseq,@file )->done;
 
 #-------------------------------------------------------------------------
 
 __END__
 
-=head1 html2ntvml [-b] [-e encoding] [-t 256] [-f files]
+=head1 html2ntvml [-i] [-E defaultinputencoding] [-a] [-b] [-p] [-n] [-t 256] [-f files]
 
-Very basic HTML to XML converter for use with NexTrieve.
+HTML to XML converter for use with NexTrieve.
 
 =head2 Attributes
 
@@ -184,6 +225,25 @@ them from STDIN, that is possible by specifying the -f parameter, followed
 by the list of files you want to process.  This is additional to any filenames
 piped through STDIN.
 
+=head2 -E defaultinputencoding
+
+When processing HTML, many older HTML-files do not contain the information
+needed for XML to determine which character encoding is being used.  By
+specifying the -E parameter, you can specify which encoding should be assumed
+if no encoding information is found.  The default is "iso-8859-1".
+
+=head2 -n
+
+If you are merging multiple runs of this script into the same file, you do
+not need the <?xml...?> processor instruction to be repeated.  By specifying
+this flag, the processor instruction will _not_ be emitted to the XML stream.
+
+=head2 -b
+
+If you are merging results of multiple runs, you may also want the <ntv:docseq>
+container not to be emitted.  Specifying the -b (for "bare XML") flag does just
+that.
+
 =head2 -t 256: maximum length for title attribute
 
 Some HTML out there in the world contains B<very> long titles.  This is done
@@ -201,11 +261,41 @@ the length of the title stored as a texttype.
 
 The default for -t is B<0>, indicating not limiting of text.
 
-=head2 -b: perform check for binary files, ignore if binary
+=head2 -i: perform check for binary files, ignore if binary
 
 Sometimes a binary file (such as .gif image) can become part of the list of
-files to be processed, causing garbage to be indexed.  If the -b flag is
+files to be processed, causing garbage to be indexed.  If the -i flag is
 specified, an additional check is performed to guess whether the file is a
 binary file.  If it is, then it will be silently ignored.
+
+=head2 -a: remove ASP-style tags from HTML
+
+If the HTML-files processed are in fact ASP-pages, it may be wise to remove
+the ASP-style tags from the HTML before being processed.  Specifying the "-a"
+flag will do just that: removing anything between "<%...%>" inclusive.
+
+=head2 -p: remove PHP-style tags from HTML
+
+If the HTML-files processed are in fact PHP-pages, it may be wise to remove
+the PHP-style tags from the HTML being processed.  Specifying the "-p" will
+do just that: removing anything between "<?...?>" and "<%..%>" inclusive.
+Please note that the <script language="php">...</script> tags are always
+removed, regardless of the -p setting.
+
+=head1 AUTHOR
+
+Elizabeth Mattijsen, <liz@dijkmat.nl>.
+
+Please report bugs to <perlbugs@dijkmat.nl>.
+
+=head1 COPYRIGHT
+
+Copyright (c) 1995-2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+reserved.  This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+http://www.nextrieve.com and the NexTrieve::xxx modules.
 
 =cut

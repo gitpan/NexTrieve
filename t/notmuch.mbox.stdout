@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+<document>
+<attributes>
+<mailbox>t/notmuch.mbox</mailbox>
+<offset>0</offset>
+<length>57</length>
+<subject>before subject</subject>
+</attributes>
+<text>
+<subject>before subject</subject>
+before message
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/notmuch.mbox</mailbox>
+<offset>57</offset>
+<length>459</length>
+<date>19970502</date>
+<from>someone</from>
+<subject>ze zubject</subject>
+</attributes>
+<text>
+<subject>ze zubject</subject>
+</text>
+</document>
+<document>
+<attributes>
+<mailbox>t/notmuch.mbox</mailbox>
+<offset>516</offset>
+<length>54</length>
+<subject>after subject</subject>
+</attributes>
+<text>
+<subject>after subject</subject>
+after message
+</text>
+</document>
+</ntv:docseq>
