@@ -1,0 +1,21 @@
+Check Collection: are all subobjects working correctly?
+
+Add ultralite support to NexTrieve::Resource?
+
+Add module "Issue" that is capable of keeping multiple issues of an indexdir
+and have new issues made (either incrementally or from scratch), possibly
+together with an "Issues" module, which would allow you to specify how many
+issues to keep.
+
+Check all of the docs: create section of inherited methods in each submodule.
+Add more examples.
+
+Add module "HTML" for creating "Document" object from an HTML file.  Use
+ntvhtml2ntvml as a basis for this functionality.
+
+Add module "Message" for creating "Document" object from a mail or a newsgroup
+message.
+
+Add module "Mailbox" for interfacing with the Perl Mailbox:: modules.
+
+Why is t/querylog not removed when it _is_ empty?
