@@ -26,14 +26,15 @@ The following modules are part of the basic distribution:
  NexTrieve::Daemon              logical daemon object
  NexTrieve::Docseq              logical document sequence for indexing
  NexTrieve::Document            logical document object
- NexTrieve::Resource            create/adapt resource-file
+ NexTrieve::Hitlist             result of query from search engine
+ NexTrieve::Hitlist::Hit        a single hit of the result
+ NexTrieve::HTML                convert HTML to logical Document object
  NexTrieve::Index               index XML
  NexTrieve::Replay              turn Querylog into Hitlist objects
+ NexTrieve::Resource            create/adapt resource-file
  NexTrieve::Search              logical search engine object
  NexTrieve::Query               create/adapt query
  NexTrieve::Querylog            turn query log into Query objects
- NexTrieve::Hitlist             result of query from search engine
- NexTrieve::Hitlist::Hit        a single hit of the result
 
 If you are used to handling XML in Perl, you probably only need the
 IO::Socket module to perform searches with NexTrieve.

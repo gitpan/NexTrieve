@@ -6,7 +6,7 @@ package NexTrieve::Docseq;
 
 use strict;
 @NexTrieve::Docseq::ISA = qw(NexTrieve);
-$NexTrieve::Docseq::VERSION = '0.02';
+$NexTrieve::Docseq::VERSION = '0.03';
 
 # Initialize the list of texttype keys
 
@@ -35,7 +35,7 @@ my %dispatch; %dispatch = (
 		        ) #join
 		       }, #sub
 
- 'NexTrieve::Document' => sub {$_[0]->write_string}, # must be in quotes 5.005
+ 'NexTrieve::Document' => sub{shift->recode(shift)}, # must be quoted 5.005
 
  SCALAR		=> sub {${$_[0]}},
 );
@@ -56,9 +56,11 @@ sub add {
 
 # Obtain the object
 # Add the chunks to the object
+# Set the encoding if none was specified yet
 
   my $self = shift;
   my $class = ref($self);
+  $self->{$class.'::encoding'} ||= $self->NexTrieve->encoding || 'utf-8';
 
 # If we're streaming
 #  For all of the data specified
@@ -68,7 +70,7 @@ sub add {
     foreach my $chunk (@_) {
       $self->_pipe( \&{$dispatch{ref($chunk)} || sub {
        $self->_add_error( "Cannot handle chunk of type '".ref($chunk)."'" );
-       return;} }($chunk) || '' );
+       return;} }($chunk,$self) || '' );
     }
 
 # Else
@@ -78,6 +80,27 @@ sub add {
     push( @{$self->{$class.'::sequence'}},@_ );
   }
 } #add
+
+#------------------------------------------------------------------------
+
+sub done {
+
+# Obtain the object
+# Make sure the outer container is closed on all pipes
+
+  my $self = shift;
+  $self->_pipe( \<<EOD );
+</ntv:docseq>
+EOD
+
+# Obtain the class
+# Close all of the pipes
+# Remove any knowledge of the streams
+
+  my $class = ref($self);
+  close( $_ ) foreach @{$self->{$class}};
+  delete( $self->{$class} );
+} #done
 
 #------------------------------------------------------------------------
 
@@ -105,10 +128,12 @@ sub stream {
   }
 
 # Make sure we have a DOM
+# Make sure we have an encoding if none was specified yet
 # Obtain the version information and initial XML
 # Return now if an error has occurred
 
   $self->_create_dom;
+  $self->{$class.'::encoding'} ||= $self->NexTrieve->encoding || 'utf-8';
   my ($version,$xml) = $self->_init_xml;
   return $self unless $version;
 
@@ -147,27 +172,6 @@ sub stream {
 
   return $self;
 } #stream
-
-#------------------------------------------------------------------------
-
-sub done {
-
-# Obtain the object
-# Make sure the outer container is closed on all pipes
-
-  my $self = shift;
-  $self->_pipe( \<<EOD );
-</ntv:docseq>
-EOD
-
-# Obtain the class
-# Close all of the pipes
-# Remove any knowledge of the streams
-
-  my $class = ref($self);
-  close( $_ ) foreach @{$self->{$class}};
-  delete( $self->{$class} );
-} #done
 
 #------------------------------------------------------------------------
 
@@ -320,7 +324,7 @@ sub _add_chunks {
   foreach my $chunk (@{$self->{ref($self).'::sequence'}}) {
     $$refxml .= &{$dispatch{ref($chunk)} || sub {
      $self->_add_error( "Cannot handle chunk of type '".ref($chunk)."'" );
-     return;} }($chunk) || '';
+     return;} }($chunk,$self) || '';
   }
 } #_add_chunks
 

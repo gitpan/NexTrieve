@@ -58,7 +58,9 @@ $docseq->write_file;
 ok(-e $filename);
 
 # Initialize trial XML
+$ntv->encoding( 'ISO-8859-1' );
 $xml = <<EOD;
+<?xml version="1.0" encoding="iso-8859-1"?>
 <ntv:docseq xmlns:ntv="http://www.nextrieve.com/$version">
 <document><attributes><id>1</id></attributes></document>
 <document><attributes><id>2</id></attributes></document>
@@ -67,11 +69,19 @@ $xml = <<EOD;
 <attributes>
 <id>5</id>
 </attributes>
+<text>
+élève
+</text>
 </document></ntv:docseq>
 EOD
 
 # 11 Add chunks and see if they come out right
-$docseq = addchunks( $ntv->Docseq );
+my $document = $ntv->Document( {
+ encoding => 'utf-8',
+ attribute => [qw(id 5)],
+ text => ['','Ã©lÃ¨ve']
+} );
+$docseq = addchunks( $ntv->Docseq,$document );
 ok($docseq->xml,$xml);
 
 # 12 Add chunks, now using streaming mode, explicitely closing the streams
@@ -95,6 +105,10 @@ $docseq->add( "<document><attributes><id>1</id></attributes></document>\n" );
 $docseq->add( \"<document><attributes><id>2</id></attributes></document>\n" );
 $docseq->add( ["<document><attributes><id>3</id></attributes></document>\n"] );
 $docseq->add( {document => {attributes => {id => 4}}} );
-$docseq->add( $ntv->Document( {attribute => [qw(id 5)]} ) );
+my $document = shift || $ntv->Document( {
+ attribute => [qw(id 5)],
+ text => ['','élève']
+} );
+$docseq->add( $document );
 return $docseq;
 }

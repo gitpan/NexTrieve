@@ -1,0 +1,211 @@
+#!/usr/bin/perl -w
+
+#-------------------------------------------------------------------------
+
+# Make sure we pre-declare everything
+# Use the necessary Perl modules
+
+use strict;
+use NexTrieve qw(HTML);
+
+# Create a NexTrieve object
+
+my $ntv = NexTrieve->new( {DieOnError => 1} );
+
+# If there are no arguments specified whatsoever
+#  Make sure we can execute external programs when in taint mode
+#  Show the POD documentation
+#  And exit
+
+if (@ARGV==0 and -t STDIN) {
+  $ntv->untaint( $ENV{'PATH'} );
+  exec( 'perldoc',$0 );
+  exit;
+}
+
+# Initialize the binary check flag
+# Initialize the encoding
+# Initialize the maximum title length
+# Initialize the list of files
+# Define the flag to be used
+
+my $binarycheck;
+my $encoding;
+my $titlemax;
+my @file;
+my $flag;
+
+# For all of the parameters
+#  If it is a (new) flag
+#   Obtain the flag
+#   If forcing binary check, set flag and reset the global flag
+#   Reloop
+#  Warn user if parameter without known flag and exit
+
+foreach (@ARGV) {
+  if (m#^-(\w)#) {
+    $flag = $1;
+    $binarycheck = 1, $flag = '' if $flag eq 'b';
+    next;
+  }
+  die "Must specify type of parameter first\n" unless $flag;
+
+#  Add filename if we're collecting filenames
+
+  push( @file,$_ ) if $flag eq 'f';
+
+# If an encoding is specified
+#  Obtain that encoding
+
+  if ($flag eq 'e') {
+    $encoding = $_; $flag = '';
+
+#  Elseif it is a maximum length of a title
+#   Die now if strange value
+#   Set maximum lengtH and reset flag (no more values for this)
+
+  } elsif ($flag eq 't') {
+    die "Cannot specify '$_' as maximum length for title attributes\n"
+     unless m#^\d+$#;
+    $titlemax = $_; $flag = '';
+  }
+}
+
+# Add any files that are being piped in
+# Make sure any newlines are removed from files
+
+push( @file,<STDIN> ) unless -t STDIN;
+chomp( @file );
+
+# Create the HTML object
+# Set the binary check flag if set
+# Set the maximum length of the title if set
+
+my $html = $ntv->HTML;
+$html->binarycheck( $binarycheck ) if $binarycheck;
+$html->titlemax( $titlemax ) if $titlemax;
+
+# Create the docseq object
+# Set the encoding if there is any specified
+# Make sure we'll be streaming to STDOUT to reduce memory requirements
+# Do the conversion and finish up the stream
+
+my $docseq = $ntv->Docseq;
+$docseq->encoding( $encoding ) if $encoding;
+$docseq->stream( \*STDOUT );
+$html->Docseq( $docseq,@file )->done;
+
+#-------------------------------------------------------------------------
+
+__END__
+
+=head1 html2ntvml [-b] [-e encoding] [-t 256] [-f files]
+
+Very basic HTML to XML converter for use with NexTrieve.
+
+=head2 Attributes
+
+XML <filename> attribute contains the filename of the HTML file.
+
+XML <title> attribute contains the title of the HTML-file (if any)
+
+=head2 Text-types
+
+XML <title> text-type contains the title of the HTML-file (if any)
+
+XML <description> text-type contains the text that was found in the CONTENT=
+attribute of the HTML <META> tag with the name "DESCRIPTION".
+
+XML <keywords> text-type contains the text that was found in the CONTENT=
+attribute of the HTML <META> tag with the name "KEYWORDS".
+
+=head2 Javascript
+
+Any text within an HTML <SCRIPT> container is ignored.
+
+=head2 Text
+
+Any text in any other HTML container is added to the XML <text> container.
+
+=head2 Example Output
+
+ <document>
+  <attributes>
+   <filename>index.html</filename>
+   <title>Index of contents</title>
+  </attributes>
+  <text>
+   <title>Index of contents</title>
+   <description>Description of file found in meta tags</description>
+   <keywords>Keywords of file found in meta tags</keywords>
+   Text found in the body of the file
+  </text>
+ </document>
+
+=head2 Why <title> both an attribute as well as a text-type?
+
+A match for a word in a query in the <title> text-type can be very much more
+significant than when that word would be found in the body text.  However, if
+you want to display the information of a hit, it is handy to have the title
+(and the filename) of the document available as well.  That is why the title
+is added as an attribute as well, even though it can not be used for
+constraining a query (at least, not yet).
+
+=head1 Usage
+
+ html2ntvml -f file1 file2 file3 > xml
+
+ html2ntvml <files.list > xml
+
+=head2 Example
+
+Convert all .html files in the "doc_root" directory to XML and store that XML
+in the file "xml".
+
+ html2ntvml -f doc_root/*.html >xml
+
+=head2 Example
+
+Index all of the files located by find command.
+
+ find / --iregex '*.htm*' | html2ntvml | docseq | ntvindex -
+
+=head1 Requirements
+
+Requires the availability of the NexTrieve.pm module and associated modules
+as found on CPAN (http://www.cpan.org/).
+
+=head1 Parameter settings
+
+=head2 -f file1 file2 file3: read filenames from command line
+
+If you want to specify the filenames from the command line rather than pipe
+them from STDIN, that is possible by specifying the -f parameter, followed
+by the list of files you want to process.  This is additional to any filenames
+piped through STDIN.
+
+=head2 -t 256: maximum length for title attribute
+
+Some HTML out there in the world contains B<very> long titles.  This is done
+by some people to get higher rankings, as many search engines value text in a
+title more than text in a body (or only search in the title at all).
+
+Experience has shown that titles of more than 10K are not uncommon.  This
+however causes all sorts of problems in the display of the hitlists (where
+the title is one of the attributes returned) and in general it brings down
+the performance.
+
+The -t parameter allows you to put a maximum length of the title as stored
+as an attribute (and therefore returned in the hitlist).  It does B<not> alter
+the length of the title stored as a texttype.
+
+The default for -t is B<0>, indicating not limiting of text.
+
+=head2 -b: perform check for binary files, ignore if binary
+
+Sometimes a binary file (such as .gif image) can become part of the list of
+files to be processed, causing garbage to be indexed.  If the -b flag is
+specified, an additional check is performed to guess whether the file is a
+binary file.  If it is, then it will be silently ignored.
+
+=cut

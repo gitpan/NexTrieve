@@ -6,7 +6,7 @@ package NexTrieve::Document;
 
 use strict;
 @NexTrieve::Document::ISA = qw(NexTrieve);
-$NexTrieve::Document::VERSION = '0.02';
+$NexTrieve::Document::VERSION = '0.03';
 
 # Return true value for use
 

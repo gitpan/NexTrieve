@@ -6,7 +6,7 @@ package NexTrieve::Querylog;
 
 use strict;
 @NexTrieve::Querylog::ISA = qw(NexTrieve);
-$NexTrieve::Querylog::VERSION = '0.02';
+$NexTrieve::Querylog::VERSION = '0.03';
 
 # Use all of the NexTrieve submodules that we need for sure
 
@@ -38,6 +38,36 @@ sub _new {
 #------------------------------------------------------------------------
 
 # The folloing methods return objects
+
+#------------------------------------------------------------------------
+
+# OUT: 1..N query objects for all queries in the log
+
+sub Queries {
+
+# Obtain the object
+# Initialize the list of queries
+
+  my $self = shift;
+  my @query;
+
+# Obtain local copy of the handle
+# Find out where we're at
+# While there are more queries to fetch
+#  Save it in the list
+
+  my $handle = $self->_handle;
+  my $tell = tell( $handle );
+  while (my $query = $self->Query) {
+    push( @query,$query );
+  }
+
+# Seek back to the position where we were
+# Return the final list of queries
+
+  seek( $self->_handle,$tell,0 );
+  return @query;
+} #Queries
 
 #------------------------------------------------------------------------
 
@@ -107,7 +137,7 @@ sub filename {
 #  IN: 1 new handle specification
 # OUT: 1 current/old handle specification
 
-sub _handle { shift->_class_variable( 'handle',@_ ) } #_handle
+sub _handle { shift->_class_variable( 'HANDLE',@_ ) } #_handle
 
 #------------------------------------------------------------------------
 
@@ -191,6 +221,10 @@ directly, but through the Querylog method of the NexTrieve object.
 =head1 METHODS
 
 These methods are available to the NexTrieve::Querylog object.
+
+=head2 Queries
+
+ @query = $querylog->Queries;
 
 =head2 Query
 

@@ -1,3 +1,7 @@
+# fix all test errors caused by new encoding and collection stuff
+
+# Add support for re-coding and encode_to
+
 package NexTrieve;
 
 # Make sure we do everything by the book
@@ -6,7 +10,7 @@ package NexTrieve;
 
 use strict;
 @NexTrieve::ISA = qw();
-$NexTrieve::VERSION = '0.02';
+$NexTrieve::VERSION = '0.03';
 
 # Use the external modules that we need
 
@@ -16,6 +20,16 @@ use IO::Socket ();
 
 my $makemd5;
 $makemd5 = \&Digest::MD5::md5_hex if defined( $Digest::MD5::VERSION );
+
+# Initialize reference to recoding handler
+
+my $recoding = '';
+
+# Initialize the hash with references to recoding subroutines
+
+my %recoding = (
+ iconv	=> \&_iconv,
+);
 
 # Create the character to entity conversion hash
 # Create the list of characters for matching
@@ -202,6 +216,13 @@ sub Hitlist { 'NexTrieve::Hitlist'->_new_from_filename_xml( @_ ) } #Hitlist
 
 #-------------------------------------------------------------------------
 
+#  IN: 1 ref to hash with methods and values
+# OUT: 1 instantiated NexTrieve::Search object
+
+sub HTML { 'NexTrieve::HTML'->_new( @_ ) } #HTML
+
+#-------------------------------------------------------------------------
+
 #  IN: 1 filename or xml or NexTrieve::Resource object
 #      2 ref to hash with methods and values
 # OUT: 1 instantiated NexTrieve::Search object
@@ -320,52 +341,38 @@ sub Search { 'NexTrieve::Search'->_new( @_ ) } #Search
 
 sub DieOnError { _variable( shift,'DieOnError',@_ ) } #DieOnError
 
-#-------------------------------------------------------------------------
+#------------------------------------------------------------------------
 
-#  IN: 1 new setting for Encoding (default: no change)
-# OUT: 1 current/old setting for Encoding
+#  IN: 1 encoding (default: utf8)
+# OUT: 1 current encoding
 
 sub encoding {
 
 # Obtain the object
-# If there are new parameters
-#  Obtain local copy of the class name
-#  If there is version information (not virginal anymore)
-#   Add error and return
+# Create the field name
+# Obtain current value of encoding
 
   my $self = shift;
-  if (@_) {
-    my $class = ref($self);
-    if ($class ne 'NexTrieve' and exists $self->{$class.'::version'}) {
-      $self->_add_error( "Can only set encoding on untouched $class object" );
-      return;
-    }
+  my $field = ref($self).'::encoding';
+  my $encoding = $self->{$field} || '';
 
-#  Set the name of the field containing the encoding
+# If there is an encoding specified
 #  If there is an encoding already
-#   Add error and return
+#   Add error
+#  Else
+#   Obtain the new encoding
 
-    my $field = $class.'::encoding';
-    if (exists( $self->{$field} ) and $self->{$field}) {
-      $self->_add_error(
-       "Already encoded as '$self->{$field}', cannot change to '$_[0]'" );
-      return;
-    }
-
-#  Obtain the encoding
-#  If unkown encoding
-#   Add error and return
-
-    my $encoding = lc($_[0]);
-    unless ($encoding =~ m#^(?:utf-8|utf-16|utf-32|us-ascii|iso-8859-1|iso-latin-1)#) {
-      $self->_add_error( "$_[0] is an unknown encoding" );
-      return;
+  if (@_) {
+    if ($encoding) {
+      $self->_add_error( "Cannot change encoding from '$encoding'" );
+    } else {
+      $encoding = $self->_normalize_encoding( shift );
     }
   }
 
-# Return setting/returning whatever is needed
+# Return the current encoding, saving it in the object on the fly
 
-  return _class_variable_kill_xml( $self,'encoding',@_ );
+  return $self->{$field} = $encoding;
 } #encoding
 
 #-------------------------------------------------------------------------
@@ -714,6 +721,36 @@ sub ask_server_port_file {
 
 #-------------------------------------------------------------------------
 
+# OUT: 1 reference to recoding handler (empty if none found)
+
+sub find_recoding {
+
+# Obtain the object
+# Initialize the handler
+
+  my $self = shift;
+  my $handler = '';
+
+# If there is an iconv available
+#  Obtain the first line
+#  Set reference to iconv handler if it seems to be ok
+
+  if (my $handle = $self->openfile( "iconv -V|" )) {
+    my $line = <$handle>; close( $handle );
+    $handler = \&_iconv if $line =~ m#^iconv \(GNU libc\)#;
+  }
+
+# Set error if there is no handler still
+# Return whatever we found if not called in a void context
+# Set the global recoding handler if still here (in void context)
+
+  $self->_add_error( "Not able to find any recoding handler" ) unless $handler;
+  return $handler if defined( wantarray );
+  $recoding = $handler;
+} #find_recoding
+
+#-------------------------------------------------------------------------
+
 # IN/OUT: 1..N left-values to normalize
   
 sub normalize {
@@ -825,6 +862,77 @@ return $handle if $handle = IO::File->new( @_ );
   $self->_add_error( "Could not open file '$_[0]': $!" );
   return;
 } #openfile
+
+#-------------------------------------------------------------------------
+
+#  IN: 1 encoding or object of which encoding to encode to
+# OUT: 1 XML of object in the given encoding
+
+sub recode {
+
+# Obtain the object
+# Obtain the other object or encoding
+
+  my $self = shift;
+  my $other = shift;
+
+# Obtain the encoding
+# Obtain the other encoding
+# Return the original XML now if they're the same
+
+  my $encoding = $self->encoding;
+  my $otherencoding =
+   ref($other) ? $other->encoding : $self->_normalize_encoding( $other );
+  return $self->write_string if $encoding eq $otherencoding;
+
+# If this object does not have an encoding yet
+#  Just set the other encoding
+#  Return the original XML
+
+  unless ($encoding) {
+    $self->encoding( $otherencoding );
+    return $self->write_string;
+  }
+
+# If there is no recoding handler yet, find one
+# Return now if still none found
+# Return result of recoding process
+
+  $recoding ||= $self->find_recoding;
+  return '' unless $recoding;
+  return &{$recoding}( $self,$encoding,$otherencoding );
+} #recode
+
+#-------------------------------------------------------------------------
+
+#  IN: 1 reference to handler for recoding or known token
+# OUT: 1 object itself
+
+sub recode_handler {
+
+# Obtain the object
+# Obtain the handler specification
+
+  my $self = shift;
+  my $handler = shift;
+
+# If it is a keyword
+#  Use the handler associated with the keyword
+# Elseif it is a CODE reference
+#  Use that as the handler
+# Else
+#  Return indicating an error
+# Return the object (no problem here)
+
+  if (exists $recoding{$handler}) {
+    $recoding = $recoding{$handler};
+  } elsif (ref($handler) eq 'CODE') {
+    $recoding = $handler;
+  } else {
+    return $self->_add_error( "Cannot use '$handler' as a recoding handler" );
+  }
+  retun $self;
+} #recode_handler
 
 #-------------------------------------------------------------------------
 
@@ -1280,11 +1388,10 @@ sub _filename_xml {
 sub _inherit {
 
 # Obtain the object
-# Obtain the class of the object
 # Create local copy of original NexTrieve object
 
   my $self = shift;
-  my $nextrieve = shift || $self->{'Nextrieve'};
+  my $ntv = shift || $self->{'Nextrieve'};
 
 # For names of all of the fields that we need to copy
 #  Copy the value
@@ -1296,7 +1403,7 @@ sub _inherit {
    ShowErrorsAsWarnings
    Tmp
     )) {
-    $self->{$_} ||= $nextrieve->{$_} if exists $nextrieve->{$_};
+    $self->{$_} ||= $ntv->{$_} if exists $ntv->{$_};
   }
   return $self;
 } #_inherit
@@ -1440,6 +1547,24 @@ sub _command_log {
   $self->{ref($self).'::READFROM'} = -e $log ? -s _ : 0;
   return ($command,$log,$indexdir);
 } #_command_log
+
+#-------------------------------------------------------------------------
+
+#  IN: 1 encoding to normalize
+# OUT: 1 normalized encoding
+
+sub _normalize_encoding {
+
+# Obtain the object
+# Obtain the lowercase encoding
+# Get rid of any special characters
+# And return the result
+
+  my $self = shift;
+  my $encoding = lc(shift);
+  $encoding =~ s#[^\w\-\_]##sg;
+  return $encoding;
+} #_normalize_encoding
 
 #-------------------------------------------------------------------------
 
@@ -2290,6 +2415,58 @@ sub _delete_dom {} #_delete_dom
 
 #-------------------------------------------------------------------------
 
+# recoding subroutines
+
+#-------------------------------------------------------------------------
+
+#  IN: 1 object on which "write_string" can be done
+#      2 encoding of XML now
+#      3 encoding of XML to be
+# OUT: 1 re-encoded XML or empty string if re-encoding failed
+
+sub _iconv {
+
+# Obtain the object
+# Obtain the FROM encoding
+# Obtain the TO encoding
+
+  my $self = shift;
+  my $from = $self->_normalize_encoding( shift );
+  my $to = $self->_normalize_encoding( shift );
+
+# Create the temporary filename
+# Attempt to open stream
+# Return now if pipe failed to open
+
+  my $tempfilename = tempfilename( $self || \$self,'_iconv' );
+  my $handle = $self->openfile( "|iconv -f $from -t $to -o $tempfilename" );
+  return '' unless $handle;
+
+# Write the XML to be converted to the pipe
+# Close the pipe
+
+  print $handle $self->write_string;
+  close( $handle );
+
+# Attempt to open the result file
+# Return now if failed
+
+  $handle = $self->openfile( $tempfilename );
+  return '' unless $handle;
+
+# Obtain the converted XML
+# Close the handle
+# Remove the temporary filename
+# Return the XML that was found
+
+  my $xml = join( '',<$handle> );
+  close( $handle );
+  unlink( $tempfilename );
+  return $xml;
+} #_iconv
+
+#-------------------------------------------------------------------------
+
 # subroutines for standard Perl features
 
 #-------------------------------------------------------------------------
@@ -2311,11 +2488,13 @@ sub import {
   my @use;
   my @all = qw(
    Collection
+   Collection::Index
    Daemon
    Docseq
    Document
    Hitlist
    Hitlist::Hit
+   HTML
    Index
    Query
    Querylog
@@ -2423,17 +2602,19 @@ The following modules are part of the basic distribution:
 
  NexTrieve			base module
  NexTrieve::Collection		logical collection object	
+ NexTrieve::Collection::Index	logical index object within a collection
  NexTrieve::Daemon		logical daemon object
  NexTrieve::Docseq		logical document sequence for indexing
  NexTrieve::Document		logical document object
+ NexTrieve::Hitlist		result of query from search engine
+ NexTrieve::Hitlist::Hit	a single hit of the result
+ NexTrieve::HTML		convert HTML-file(s) to logical document(s)
+ NexTrieve::Index		create an index out of a docseq
+ NexTrieve::Replay		turn Querylog into Hitlist for a Search
  NexTrieve::Resource		create/adapt resource-file
- NexTrieve::Index		index XML
- NexTrieve::Replay		turn Querylog into Hitlist objects for a Search
  NexTrieve::Search		logical search engine object
  NexTrieve::Query		create/adapt query
  NexTrieve::Querylog		turn query log into Query objects
- NexTrieve::Hitlist		result of query from search engine
- NexTrieve::Hitlist::Hit	a single hit of the result
 
 If you are used to handling XML in Perl, you probably only need the IO::Socket
 module to perform searches with NexTrieve.  Or you can use the method
@@ -2463,6 +2644,18 @@ The following methods are available for setting up the NexTrieve object itself.
 =head2 ask_server_port
 
  $hitlistxml = $ntv->ask_server_port( server:port | port,$queryxml );
+
+=head2 ask_server_port_fh
+
+ $ntv->ask_server_port_fh( server:port | port,$queryxml,$handle );
+
+=head2 ask_server_port_file
+
+ $ntv->ask_server_port_file( server:port | port,$queryxml,$filename );
+
+=head2 find_recoding
+
+ $ntv->find_recoding;
 
 =head1 INHERITED METHODS
 
@@ -2535,6 +2728,14 @@ NexTrieve::Hitlist.
 
  $encoding = $ntvobject->encoding;
  $ntvobject->encoding( $encoding ); # sets default on $ntv
+
+=head2 recode
+
+ $ntvobject->recode( $otherobject | encoding );
+
+=head2 recode_handler
+
+ $ntvobject->recode_handler( \&yourownhandler );
 
 =head2 version
 

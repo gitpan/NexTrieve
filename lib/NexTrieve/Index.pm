@@ -6,7 +6,7 @@ package NexTrieve::Index;
 
 use strict;
 @NexTrieve::Index::ISA = qw(NexTrieve);
-$NexTrieve::Index::VERSION = '0.02';
+$NexTrieve::Index::VERSION = '0.03';
 
 # Use other NexTrieve modules that we need always
 

@@ -6,7 +6,7 @@ package NexTrieve::Daemon;
 
 use strict;
 @NexTrieve::Daemon::ISA = qw(NexTrieve);
-$NexTrieve::Daemon::VERSION = '0.02';
+$NexTrieve::Daemon::VERSION = '0.03';
 
 # Use all the other NexTrieve modules that we need always
 
@@ -285,7 +285,7 @@ sub _pid {
 # Return the PID
 
   my $handle = $self->openfile( $pidfile );
-  my $pid = $self->{$class.'::pid'} = <$handle>;
+  chomp( my $pid = $self->{$class.'::pid'} = <$handle> );
   close( $handle );
   return $pid;
 } #_pid

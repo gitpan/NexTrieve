@@ -1,8 +1,12 @@
+If a Document has a known encoding, is it stripped before entering the Docseq?
+
 Check Collection: are all subobjects working correctly?
 
-Add support for query caching server coniguration.
+Add support for query caching server configuration.
 
-Add ultralite support to NexTrieve::Resource?
+Add module for doing encoding conversions.  Should try out what Perl modules
+are out there for attempting to do the conversion.  Build in the capability of
+doing that automagically by the objects in the future.
 
 Add module "Issue" that is capable of keeping multiple issues of an indexdir
 and have new issues made (either incrementally or from scratch), possibly
@@ -19,5 +23,7 @@ Add module "Message" for creating "Document" object from a mail or a newsgroup
 message.
 
 Add module "Mailbox" for interfacing with the Perl Mailbox:: modules.
+
+Add ultralite support to NexTrieve::Resource?
 
 Why is t/querylog not removed when it _is_ empty?

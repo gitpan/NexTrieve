@@ -6,11 +6,11 @@ package NexTrieve::Collection;
 
 use strict;
 @NexTrieve::Collection::ISA = qw(NexTrieve);
-$NexTrieve::Collection::VERSION = '0.02';
+$NexTrieve::Collection::VERSION = '0.03';
 
 # Use all the other NexTrieve modules that we need always
 
-use NexTrieve::Resource ();
+use NexTrieve::Collection::Index ();
 
 # Return true value for use
 
@@ -77,11 +77,11 @@ sub _new {
 
 #------------------------------------------------------------------------
 
-#  IN: 1 mnemonic of part within collection
-#      2..N any extra parameters valid for the NexTrieve::Resource object
-# OUT: 1 instantiated NexTrieve::Resource object
+#  IN: 1 name of index within collection
+#      2 flag: whether to create
+# OUT: 1 instantiated NexTrieve::Collection::Index object
 
-sub Resource {
+sub Index {
 
 # Obtain the object
 # Obtain the base path of the Collection
@@ -92,47 +92,67 @@ sub Resource {
   return $self->_add_error( "'$path' is not a valid Collection" )
    unless -d $path;
 
-# Obtain the mnemonic
+# Obtain the class of the index object
+# Create an index object
+# Make sure it has a copy of the NexTrieve object
+# Inherit anything that we need
+
+  my $class = ref($self).'::Index';
+  my $index = bless {},$class;
+  $index->{'Nextrieve'} = $self->NexTrieve;
+  $index->_inherit;
+
+# Obtain the name
+# Make sure it is free of strange stuff
+# Save the name of the index in the object
+
+  my $name = shift;
+  $name =~ s#[\W]##sg;
+  $index->{$class.'::name'} = $name;
+
 # Add to the already existing path
-# Create the filename
+# Save that as the path in the object
 
-  my $mnemonic = shift;
-  $path .= "/$mnemonic";
-  my $filename = "$path/$mnemonic.res";
+  $path .= "/$name";
+  $index->{$class.'::path'} = $path;
 
-# Create local copy of the NexTrieve object
-# Return the result of the Resource creation if existing file
+# Obtain the creation flag
+# Set flag to indicate it already exists
 
-  my $ntv = $self->NexTrieve;
-  return $ntv->Resource( $filename ) if -e $filename;
+  my $create = shift || 0;
+  my $exists = ($path ne '' and -d $path);
 
-# If there is no directory for this mnemonic yet
-#  Attempt to create directory or return error
+# If the path already exists
+#  Return with error if it should be created
+# Elsif a path was specified
+#  If we're supposed to create the collection
+#   Attempt to create the directory, return with error if failed
 
-  unless (-d $path) {
-    mkdir( $path,0700 ) or
-     return $self->_add_error( "Cannot create '$path': $!" );
+  if ($exists) {
+    return $index->_add_error(
+     "'$path' already exists as a NexTrieve Collection Index" ) if $create;
+  } elsif ($path) {
+    if ($create) {
+      mkdir( $path,0700 ) or
+       return $index->_add_error( "Cannot create '$path': $!" );
+
+#  Else (collection is supposed to exist, but doesn't)
+#   Return with error
+# Else (no path specified)
+#   Return with error
+
+    } else {
+      return $index->_add_error( "'$path' is not a NexTrieve Collection Index" );
+    }
+  } else {
+    return $index->_add_error(
+     "Must specify the path of the NexTrieve Collection Index" );
   }
 
-# Create a new, empty resource file and return object of it
+# Return the object
 
-  return $ntv->Resource->write_file( $filename );
-} #Resource
-
-#------------------------------------------------------------------------
-
-#  IN: 1 mnemonic of part within collection
-#      2 logical index (optional)
-# OUT: 1 instantiated NexTrieve::Search object
-
-sub Search {
-
-# Obtain the object
-# Return the result of the Search creation
-
-  my $self = shift;
-  return $self->NexTrieve->Search( $self->Resource( shift ),@_ );
-} #Search
+  return $index;
+} #Index
 
 #------------------------------------------------------------------------
 
@@ -167,13 +187,9 @@ directly, but through the Collection method of the NexTrieve object.
 
 These methods return objects.
 
-=head2 Resource
+=head2 Index
 
- $resource = $collection->Resource( mnemonic );
-
-=head2 Resource
-
- $search = $collection->Search( mnemonic );
+ $index = $collection->Index( mnemonic );
 
 =head1 OTHER METHODS
 

@@ -1,3 +1,36 @@
+0.03	26 January 2002
+	Adapted NexTrieve's "ntvhtml2ntvml" filter for use with the NexTrieve
+	module and added as a script named "html2ntvml" and added test of
+	usage to 12html.t.  Adapted MANIFEST accordingly.
+
+	Finished first public version of NexTrieve::HTML module and added
+	test-file 12html.t.
+
+	25 January 2002
+	Fixed up encoding issues over all objects, especially with
+	NexTrieve::Document and NexTrieve::Docseq.  If a document has an
+	encoding different from the docseq, then the XML will be automatically
+	converted using the "recode" method in the NexTrieve.pm module.
+
+	Added the first automatic recoding handler searching strategy to
+	method "find_recoding" and added the recoding handler that uses
+	"iconv".
+
+	22 January 2002
+	Re-arranged the still incomplete NexTrieve::Collection module to
+	have the major part of its intelligence moved to the new
+	NexTrieve::Collection::Index module.
+
+	Created first version of NexTrieve::Collection::Index module.
+
+	21 January 2002
+	Fixed bug in $deamon->pid: now removes the newline from the string
+	so that the pid becomes truly numeric.
+
+	Started work on NexTrieve::HTML based on the ntvhtml2ntvml script.
+
+	Added method "Queries" to NexTrieve::Querylog.
+
 0.02	20 January 2002
 	$daemon->pid now waits for a max of 5 seconds to see whether the
 	pid-file appears, before returning with an error.
