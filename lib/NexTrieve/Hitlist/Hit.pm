@@ -5,7 +5,7 @@ package NexTrieve::Hitlist::Hit;
 # Make sure we do everything by the book from now on
 
 @ISA = qw(NexTrieve); # nothing from NexTrieve::Hitlist
-$VERSION = '0.40';
+$VERSION = '0.41';
 use strict;
 
 # Satisfy -require-

@@ -653,7 +653,7 @@ my $size = -s _;
 skip($skip,$targz->count_storable == 7);
 
 # 43 Check if tarfile didn't change this time
-skip($] < 5.008001 ? '' : "Cannot test reliably under Perl $]",
+skip($] < 5.008001 ? $skip : "Cannot test reliably under Perl $]",
  $size == -s $countfile);
 
 # 44 Check if we can create a resource file

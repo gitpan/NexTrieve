@@ -3,7 +3,7 @@ package NexTrieve;
 # Set version information
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.40';
+$VERSION = '0.41';
 use strict;
 
 # Use the external modules that we need always
@@ -3826,6 +3826,26 @@ sub _hash2attributes {
 #------------------------------------------------------------------------
 
 # Internal initialization subroutines
+
+#-------------------------------------------------------------------------
+
+#  IN: 1 object or class (ignored)
+#      2 program name
+# OUT: 1 full path to program name if executable, else undef
+
+sub _find_executable {
+
+# For all of the directories in the path
+#  Create path
+#  Return that path if we can execute that program
+# Return indicating failure
+
+    foreach (split( ':',$ENV{'PATH'} || '' )) {
+       my $path = "$_/$_[1]";
+       return $path if -x $path;
+    }
+    return;
+} #_find_executable
 
 #------------------------------------------------------------------------
 

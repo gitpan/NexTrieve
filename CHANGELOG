@@ -1,3 +1,9 @@
+0.41	14 August 2003
+	The logic of checking for external executables seemed flawed,
+	especially when running under Solars.  Added internal class
+	routine "_find_executable" to NexTrieve.pm and adapted NexTrieve::PDF's
+	"executable" class method to call that instead.
+
 0.40	13 August 2003
 	Cleaned up Makefile.PL and updated copyright info.  Made sure the
 	test-suite runs with strict and warnings enabled.  Added a message

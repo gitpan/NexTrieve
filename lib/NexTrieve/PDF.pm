@@ -5,7 +5,7 @@ package NexTrieve::PDF;
 # Make sure we do everything by the book from now on
 
 @ISA = qw(NexTrieve);
-$VERSION = '0.40';
+$VERSION = '0.41';
 use strict;
 
 # Use other NexTrieve modules that we need always
@@ -30,23 +30,15 @@ use NexTrieve::Document ();
 sub executable {
 
 # Obtain the class
-# Set the filenames to check if non specified already
-
-  my $class = shift;
-  @_ = qw(pdfinfo pdftotext) unless @_;
-
-# For all the program names specified
+# For all the program names (implicitely) specified
 #  Return false if strange characters in program name
-#  Attempt to execute obtaining version info
-#  Reloop if right exit code
-#  Return indicating failure
+#  Return false if not executable
 # Return indicating success
 
-  foreach my $program (@_) {
+  my $class = shift;
+  foreach my $program (@_ ? @_ : qw(pdfinfo pdftotext)) {
     return 0 if $program =~ m#\W#;
-    my $exit = system( "$program -v 2>/dev/null" );
-    next if $exit =~ m#^(?:0|256)$#;
-    return 0;
+    return 0 unless $class->_find_executable( $program );
   }
   return 1;
 } #executable

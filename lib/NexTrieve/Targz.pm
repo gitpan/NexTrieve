@@ -5,7 +5,7 @@ package NexTrieve::Targz;
 # Make sure we do everything by the book from now on
 
 @ISA = qw(NexTrieve);
-$VERSION = '0.40';
+$VERSION = '0.41';
 use strict;
 
 # Make sure we use the modules that we need here

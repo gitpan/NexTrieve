@@ -3,7 +3,7 @@ package NexTrieve::Overview;
 # Set version information
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.40';
+$VERSION = '0.41';
 use strict;
 
 # Show warning that you shouldn't -use- this module

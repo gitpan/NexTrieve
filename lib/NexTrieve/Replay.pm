@@ -5,7 +5,7 @@ package NexTrieve::Replay;
 # Make sure we do everything by the book from now on
 
 @ISA = qw(NexTrieve);
-$VERSION = '0.40';
+$VERSION = '0.41';
 use strict;
 
 # Use all of the NexTrieve submodules that we need for sure
